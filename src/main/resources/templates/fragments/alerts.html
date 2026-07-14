@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<!--
+  ═══════════════════════════════════════════════════════
+  FRAGMENT: alerts (flash messages)
+  Usage:
+    <div th:replace="~{fragments/alerts :: alerts}"></div>
+  Requires model: ${success}, ${error}
+  ═══════════════════════════════════════════════════════
+-->
+<div th:fragment="alerts">
+    <div th:if="${success}"
+         class="mb-5 border-[2.5px] border-black bg-green-300 px-4 py-3 text-sm font-semibold text-black"
+         style="box-shadow: 4px 4px 0 #111"
+         th:text="${success}"></div>
+    <div th:if="${error}"
+         class="mb-5 border-[2.5px] border-black bg-red-300 px-4 py-3 text-sm font-semibold text-black"
+         style="box-shadow: 4px 4px 0 #111"
+         th:text="${error}"></div>
+</div>
+
+<!--
+  ═══════════════════════════════════════════════════════
+  FRAGMENT: alerts-auth (smaller variant for auth pages)
+  Usage:
+    <div th:replace="~{fragments/alerts :: alerts-auth}"></div>
+  ═══════════════════════════════════════════════════════
+-->
+<div th:fragment="alerts-auth">
+    <div th:if="${success}"
+         class="mb-4 border-[2.5px] border-black bg-green-300 px-4 py-2.5 text-sm font-semibold text-black"
+         style="box-shadow: 3px 3px 0 #111"
+         th:text="${success}"></div>
+    <div th:if="${error}"
+         class="mb-4 border-[2.5px] border-black bg-red-300 px-4 py-2.5 text-sm font-semibold text-black"
+         style="box-shadow: 3px 3px 0 #111"
+         th:text="${error}"></div>
+</div>
+
+</html>

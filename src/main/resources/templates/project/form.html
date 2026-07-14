@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Buat Proyek')}"></head>
+<body class="min-h-screen bg-[#f0f0e8]">
+
+<!-- Navbar -->
+<nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+<!-- Main -->
+<main class="px-6 py-6">
+
+    <!-- Breadcrumb + judul -->
+    <div class="mb-5">
+        <p class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1 flex items-center gap-1">
+            <a th:href="@{/dashboard}" class="text-blue-600 no-underline hover:underline">Dashboard</a>
+            <i class="ti ti-chevron-right text-xs"></i>
+            <span class="text-black">Buat proyek</span>
+        </p>
+        <h1 class="text-2xl font-extrabold text-black tracking-tight">Buat proyek baru</h1>
+    </div>
+
+    <!-- Alert error global -->
+    <div th:if="${error}"
+         class="max-w-2xl mb-5 border-[2.5px] border-black bg-red-100 px-4 py-3 text-sm font-semibold text-red-800"
+         style="box-shadow: 4px 4px 0 #111" th:text="${error}"></div>
+
+    <!-- Form card -->
+    <div class="bg-white border-[2.5px] border-black max-w-2xl p-7" style="box-shadow: 6px 6px 0 #111">
+
+        <form th:action="@{/projects}" method="post" th:object="${projectRequestDTO}" novalidate>
+
+            <!-- === INFORMASI DASAR === -->
+            <div class="flex items-center gap-2 mb-5 pb-3 border-b-[2.5px] border-black">
+                <div class="w-8 h-8 bg-blue-600 border-2 border-black flex items-center justify-center nb-btn flex-shrink-0">
+                    <i class="ti ti-info-circle text-white text-base"></i>
+                </div>
+                <span class="text-xs font-bold uppercase tracking-widest text-black">Informasi dasar</span>
+            </div>
+
+            <!-- Nama -->
+            <div class="mb-5">
+                <label for="name" class="block text-xs font-bold uppercase tracking-widest text-black mb-1.5">
+                    Nama proyek <span class="text-red-500">*</span>
+                </label>
+                <input id="name" type="text" th:field="*{name}"
+                       placeholder="contoh: Payment Gateway Relay"
+                       maxlength="100"
+                       class="nb-input w-full px-3.5 py-2.5 text-sm text-black bg-white">
+                <p class="text-xs text-red-600 mt-1" th:if="${#fields.hasErrors('name')}"
+                   th:errors="*{name}" ></p>
+                <p class="text-xs text-gray-500 mt-1" th:unless="${#fields.hasErrors('name')}">
+                    Nama unik yang mudah dikenali. Maks 100 karakter.
+                </p>
+            </div>
+
+            <!-- Deskripsi -->
+            <div class="mb-7">
+                <label for="description" class="block text-xs font-bold uppercase tracking-widest text-black mb-1.5">
+                    Deskripsi
+                </label>
+                <textarea id="description" th:field="*{description}" rows="3"
+                          placeholder="Jelaskan kegunaan proyek ini..."
+                          class="nb-input w-full px-3.5 py-2.5 text-sm text-black bg-white resize-y"></textarea>
+                <p class="text-xs text-gray-500 mt-1">Opsional. Bantu tim memahami fungsi proyek ini.</p>
+            </div>
+
+            <!-- === KONFIGURASI TEKNIS === -->
+            <div class="flex items-center gap-2 mb-5 pb-3 border-b-[2.5px] border-black">
+                <div class="w-8 h-8 bg-violet-700 border-2 border-black flex items-center justify-center nb-btn flex-shrink-0">
+                    <i class="ti ti-settings text-white text-base"></i>
+                </div>
+                <span class="text-xs font-bold uppercase tracking-widest text-black">Konfigurasi teknis</span>
+            </div>
+
+            <!-- Public URL -->
+            <div class="mb-5">
+                <label for="publicUrl" class="block text-xs font-bold uppercase tracking-widest text-black mb-1.5">
+                    Public URL
+                </label>
+                <div class="flex">
+                    <span class="bg-[#f0f0e8] border-[2.5px] border-r-0 border-black px-3 py-2.5 text-xs font-bold text-gray-600 flex items-center whitespace-nowrap">
+                        relay.app/hook/
+                    </span>
+                    <input id="publicUrl" th:field="*{publicUrl}" readonly type="text"
+                           placeholder="nama-slug-unik"
+                           class="nb-input flex-1 px-3.5 py-2.5 text-sm text-black bg-white border-l-0">
+                </div>
+                <p class="text-xs text-gray-500 mt-1">
+                    Slug endpoint webhook yang akan menerima request masuk.
+                </p>
+            </div>
+
+            <!-- === STATUS === -->
+            <div class="flex items-center gap-2 mb-5 pb-3 border-b-[2.5px] border-black">
+                <div class="w-8 h-8 bg-emerald-600 border-2 border-black flex items-center justify-center nb-btn flex-shrink-0">
+                    <i class="ti ti-toggle-right text-white text-base"></i>
+                </div>
+                <span class="text-xs font-bold uppercase tracking-widest text-black">Status proyek</span>
+            </div>
+
+            <!-- isActive toggle -->
+            <div class="flex items-center justify-between mb-7 px-4 py-3.5 bg-[#f0f0e8] border-2 border-black">
+                <div>
+                    <p class="text-sm font-bold text-black mb-0.5">Aktifkan proyek</p>
+                    <p class="text-xs text-gray-600">Proyek aktif langsung menerima dan meneruskan webhook.</p>
+                </div>
+                <label class="relative flex-shrink-0 ml-4" style="cursor:pointer;">
+                    <input type="checkbox" th:field="*{isActive}" id="isActive" class="sr-only peer">
+                    <div class="w-12 h-6 border-[2.5px] border-black bg-gray-200 peer-checked:bg-green-400 transition-colors" style="box-shadow:2px 2px 0 #111">
+                        <div class="w-4 h-4 mt-0.5 ml-0.5 bg-black transition-transform peer-checked:translate-x-6" id="toggle-thumb"></div>
+                    </div>
+                </label>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="flex gap-3 flex-wrap">
+                <button type="submit"
+                        class="nb-btn bg-blue-600 text-white text-sm font-bold px-5 py-2.5 flex items-center gap-1.5 flex-1 justify-center">
+                    <i class="ti ti-plus"></i> Buat proyek
+                </button>
+                <a th:href="@{/dashboard}"
+                   class="nb-btn bg-[#f0f0e8] text-black text-sm font-bold px-5 py-2.5 flex items-center gap-1.5 no-underline">
+                    <i class="ti ti-arrow-left"></i> Batal
+                </a>
+            </div>
+
+        </form>
+    </div>
+</main>
+
+<script>
+    const cb = document.getElementById('isActive');
+    const thumb = document.getElementById('toggle-thumb');
+    cb.addEventListener('change', () => {
+        thumb.style.transform = cb.checked ? 'translateX(24px)' : 'translateX(0)';
+    });
+    thumb.style.transform = cb.checked ? 'translateX(24px)' : 'translateX(0)';
+
+    const projectName = document.getElementById('name');
+    const publicUrl = document.getElementById('publicUrl');
+    projectName.addEventListener('input', () => {
+        publicUrl.value = generateSlug(projectName.value);
+    });
+
+    function generateSlug(text) {
+        return text
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9\s-]/g, '')  // hapus karakter selain huruf, angka, spasi, strip
+            .replace(/\s+/g, '-')           // spasi → strip
+            .replace(/-+/g, '-')            // strip berulang → satu strip
+            .replace(/^-|-$/g, '');         // hapus strip di awal/akhir
+    }
+
+</script>
+</body>
+</html>

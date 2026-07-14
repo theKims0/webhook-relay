@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<!--
+  ═══════════════════════════════════════════════════════
+  FRAGMENT: navbar (authenticated)
+  Usage:
+    <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+  Requires model: ${user.username}, ${_csrf}
+  ═══════════════════════════════════════════════════════
+-->
+<nav th:fragment="navbar"
+     class="bg-blue-600 border-b-[3px] border-black px-6 h-14 flex items-center justify-between sticky top-0 z-50">
+    <div class="flex items-center gap-3">
+        <a th:href="@{/dashboard}"
+           class="w-9 h-9 bg-white border-[2.5px] border-black flex items-center justify-center font-bold text-lg text-blue-600 nb-btn no-underline">
+            R
+        </a>
+        <a th:href="@{/dashboard}" class="text-white font-bold text-lg tracking-tight no-underline">
+            Webhook Relay
+        </a>
+    </div>
+    <div class="flex items-center gap-2">
+        <span class="bg-white border-2 border-black px-3 py-1 text-sm font-semibold text-blue-600 nb-btn"
+              th:text="${user.username}">user</span>
+        <form th:action="@{/logout}" method="post" style="margin:0">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit"
+                    class="nb-btn bg-white text-black text-sm font-medium px-3 py-1.5 flex items-center gap-1 cursor-pointer">
+                <i class="ti ti-logout"></i> Logout
+            </button>
+        </form>
+    </div>
+</nav>
+
+</html>

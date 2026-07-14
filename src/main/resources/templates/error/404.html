@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('404 Tidak Ditemukan')}"></head>
+<body class="min-h-screen bg-[#f0f0e8] flex items-center justify-center px-4 py-10">
+
+    <div class="w-full max-w-sm flex flex-col gap-0 text-center">
+
+        <!-- Header -->
+        <div class="bg-blue-600 border-[2.5px] border-b-0 border-black px-5 py-3 flex items-center justify-center gap-3">
+            <p class="text-white font-extrabold text-base tracking-tight leading-none">Webhook Relay</p>
+        </div>
+
+        <!-- Card -->
+        <div class="nb-card bg-white px-6 py-10">
+            <h1 class="text-6xl font-extrabold text-black mb-2" style="text-shadow: 4px 4px 0px #111; color: #fca5a5;">404</h1>
+            <p class="text-lg font-bold text-black mb-2">Halaman tidak ditemukan</p>
+            <p class="text-sm text-gray-600 mb-8">URL yang Anda tuju mungkin salah ketik atau sudah dihapus.</p>
+            
+            <a th:href="@{/}"
+               class="nb-btn bg-blue-600 text-white text-sm font-bold px-4 py-3 w-full flex items-center justify-center gap-2 mt-1 cursor-pointer no-underline">
+                ← Kembali ke Beranda
+            </a>
+        </div>
+
+        <!-- Bottom stripe -->
+        <div class="h-2 border-[2.5px] border-t-0 border-black"
+             style="background: repeating-linear-gradient(-45deg, #111 0, #111 4px, #f0f0e8 4px, #f0f0e8 9px);">
+        </div>
+    </div>
+
+</body>
+</html>

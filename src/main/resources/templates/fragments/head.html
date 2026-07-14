@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<!--
+  ═══════════════════════════════════════════════════════
+  FRAGMENT: head
+  Usage:
+    <head th:replace="~{fragments/head :: head(title='Judul Halaman')}">
+  ═══════════════════════════════════════════════════════
+-->
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} + ' • Relay'">Relay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
+    <style>
+        /* ── Neo-Brutalism Design System ── */
+        .nb-card   { border: 2.5px solid #111; box-shadow: 6px 6px 0 #111; }
+        .nb-card-sm{ border: 2.5px solid #111; box-shadow: 4px 4px 0 #111; }
+        .nb-input  { border: 2.5px solid #111; border-radius: 0; transition: box-shadow .1s; }
+        .nb-input:focus { outline: none; box-shadow: 4px 4px 0 #111; background-color: #fef9c3; }
+        .nb-badge  { border: 2px solid #111; border-radius: 0; }
+        .nb-btn {
+            border: 2.5px solid #111; border-radius: 0;
+            box-shadow: 4px 4px 0 #111;
+            transition: box-shadow .1s, transform .1s;
+        }
+        .nb-btn:hover  { box-shadow: 6px 6px 0 #111; transform: translate(-1px,-1px); }
+        .nb-btn:active { box-shadow: 1px 1px 0 #111; transform: translate(2px,2px); }
+
+        /* ── Utility ── */
+        @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.3} }
+        .pulse { animation: pulse-dot 2s ease-in-out infinite; }
+    </style>
+</head>
+
+</html>

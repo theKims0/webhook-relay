@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Register')}"></head>
+<body class="min-h-screen bg-[#f0f0e8] flex items-center justify-center px-4 py-10">
+
+    <div class="w-full max-w-sm flex flex-col gap-0">
+
+        <!-- Header / Logo bar -->
+        <div class="bg-blue-600 border-[2.5px] border-b-0 border-black px-5 py-3 flex items-center gap-3">
+            <div class="w-9 h-9 bg-white border-[2.5px] border-black flex items-center justify-center font-bold text-lg text-blue-600 nb-btn flex-shrink-0">
+                R
+            </div>
+            <div>
+                <p class="text-white font-extrabold text-base tracking-tight leading-none">Webhook Relay</p>
+                <p class="text-blue-200 text-xs font-medium mt-0.5">Buat akun baru</p>
+            </div>
+            <a href="/" class="nb-btn ml-auto bg-white text-blue-600 text-xs font-bold px-3 py-1.5 no-underline whitespace-nowrap">
+                ← Kembali
+            </a>
+        </div>
+
+        <!-- Card -->
+        <div class="nb-card bg-white px-6 py-7">
+
+            <!-- Title -->
+            <div class="mb-6">
+                <p class="text-xs font-bold uppercase tracking-widest text-blue-600 mb-1">Akun baru</p>
+                <h1 class="text-2xl font-extrabold text-black tracking-tight">Register</h1>
+            </div>
+
+            <!-- Alerts -->
+            <div th:replace="~{fragments/alerts :: alerts-auth}"></div>
+
+            <form th:action="@{/register}" method="post" th:object="${user}" novalidate class="flex flex-col gap-4">
+
+                <!-- Username -->
+                <div>
+                    <label for="username" class="block text-xs font-bold uppercase tracking-widest text-black mb-1.5">
+                        Username
+                    </label>
+                    <input id="username" type="text" th:field="*{username}"
+                           placeholder="contoh: relayadmin"
+                           class="nb-input w-full px-3.5 py-2.5 text-sm text-black bg-white"
+                           required>
+                    <p class="text-xs text-red-600 font-semibold mt-1 error-message"></p>
+                    <p class="text-xs text-red-600 font-semibold mt-1"
+                       th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></p>
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label for="email" class="block text-xs font-bold uppercase tracking-widest text-black mb-1.5">
+                        Email
+                    </label>
+                    <input id="email" type="email" th:field="*{email}"
+                           placeholder="nama@email.com"
+                           class="nb-input w-full px-3.5 py-2.5 text-sm text-black bg-white"
+                           required>
+                    <p class="text-xs text-red-600 font-semibold mt-1 error-message"></p>
+                    <p class="text-xs text-red-600 font-semibold mt-1"
+                       th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></p>
+                </div>
+
+                <!-- Password -->
+                <div>
+                    <label for="password" class="block text-xs font-bold uppercase tracking-widest text-black mb-1.5">
+                        Password
+                    </label>
+                    <input id="password" type="password" th:field="*{password}"
+                           placeholder="Minimal 8 karakter"
+                           class="nb-input w-full px-3.5 py-2.5 text-sm text-black bg-white"
+                           required>
+                    <!-- Strength bar -->
+                    <div class="flex gap-1 mt-1.5">
+                        <div class="str-seg" id="seg1"></div>
+                        <div class="str-seg" id="seg2"></div>
+                        <div class="str-seg" id="seg3"></div>
+                        <div class="str-seg" id="seg4"></div>
+                    </div>
+                    <p class="text-xs text-red-600 font-semibold mt-1 error-message"></p>
+                    <p class="text-xs text-red-600 font-semibold mt-1"
+                       th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></p>
+                </div>
+
+                <!-- Konfirmasi Password -->
+                <div>
+                    <label for="confirmPassword" class="block text-xs font-bold uppercase tracking-widest text-black mb-1.5">
+                        Konfirmasi Password
+                    </label>
+                    <input id="confirmPassword" type="password" th:field="*{confirmPassword}"
+                           placeholder="Ulangi password"
+                           class="nb-input w-full px-3.5 py-2.5 text-sm text-black bg-white"
+                           required>
+                    <p class="text-xs text-red-600 font-semibold mt-1 error-message"></p>
+                    <p class="text-xs text-red-600 font-semibold mt-1"
+                       th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></p>
+                </div>
+
+                <!-- Submit -->
+                <button type="submit"
+                        class="nb-btn bg-blue-600 text-white text-sm font-bold px-4 py-3 w-full flex items-center justify-center gap-2 mt-1 cursor-pointer">
+                    Buat Akun →
+                </button>
+
+                <!-- Link ke login -->
+                <p class="text-center text-sm text-gray-600 pt-1">
+                    Sudah punya akun?
+                    <a th:href="@{/login}" class="font-bold text-blue-600 hover:underline">Masuk di sini</a>
+                </p>
+            </form>
+        </div>
+
+        <!-- Bottom stripe -->
+        <div class="h-2 border-[2.5px] border-t-0 border-black"
+             style="background: repeating-linear-gradient(-45deg, #111 0, #111 4px, #f0f0e8 4px, #f0f0e8 9px);">
+        </div>
+    </div>
+
+</body>
+<style>
+    /* Password strength bar — hanya dipakai di halaman register */
+    .str-seg { height: 4px; flex: 1; background: #d1d5db; border: 1.5px solid #111; transition: background .2s; }
+    .str-weak   { background: #fca5a5; }
+    .str-medium { background: #fde68a; }
+    .str-strong { background: #86efac; }
+</style>
+<script>
+    const form = document.querySelector('form');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    function showError(input, message) {
+        const errorBox = input.parentElement.querySelector('.error-message');
+        if (errorBox) errorBox.textContent = message;
+    }
+    function clearError(input) {
+        const errorBox = input.parentElement.querySelector('.error-message');
+        if (errorBox) errorBox.textContent = '';
+    }
+    function validateEmail() {
+        if (!emailInput.value.trim()) { showError(emailInput, 'Email tidak boleh kosong'); return false; }
+        if (!emailRegex.test(emailInput.value.trim())) { showError(emailInput, 'Format email tidak valid'); return false; }
+        clearError(emailInput); return true;
+    }
+    function updateStrength(val) {
+        const segs = ['seg1','seg2','seg3','seg4'];
+        const cls = val.length === 0 ? '' : val.length < 6 ? 'str-weak' : val.length < 10 ? 'str-medium' : 'str-strong';
+        const filled = val.length === 0 ? 0 : val.length < 6 ? 1 : val.length < 10 ? 2 : val.length < 14 ? 3 : 4;
+        segs.forEach((id, i) => {
+            const el = document.getElementById(id);
+            el.className = 'str-seg' + (i < filled && cls ? ' ' + cls : '');
+        });
+    }
+    function validatePassword() {
+        updateStrength(passwordInput.value);
+        if (!passwordInput.value) { showError(passwordInput, 'Password tidak boleh kosong'); return false; }
+        if (passwordInput.value.length < 8) { showError(passwordInput, 'Password minimal 8 karakter'); return false; }
+        clearError(passwordInput); return true;
+    }
+    function validateConfirm() {
+        if (!confirmPasswordInput.value) { showError(confirmPasswordInput, 'Konfirmasi password tidak boleh kosong'); return false; }
+        if (passwordInput.value !== confirmPasswordInput.value) { showError(confirmPasswordInput, 'Password tidak cocok'); return false; }
+        clearError(confirmPasswordInput); return true;
+    }
+    emailInput.addEventListener('input', validateEmail);
+    passwordInput.addEventListener('input', validatePassword);
+    confirmPasswordInput.addEventListener('input', validateConfirm);
+    form.addEventListener('submit', function (event) {
+        const valid = [validateEmail(), validatePassword(), validateConfirm()];
+        if (valid.includes(false)) event.preventDefault();
+    });
+</script>
+</html>

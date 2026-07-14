@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Relay — Webhook Relay Platform')}"></head>
+<!-- Page-specific styles for landing (code blocks, token colors, scroll) -->
+<style>
+    pre {
+        background: #111; color: #f0f0e8;
+        font-family: 'Courier New', monospace;
+        font-size: 0.82rem; line-height: 1.6; overflow-x: auto;
+    }
+    .token-cmd    { color: #fde68a; }
+    .token-flag   { color: #86efac; }
+    .token-string { color: #93c5fd; }
+    .token-comment{ color: #6b7280; }
+    .step-num {
+        width: 2rem; height: 2rem; flex-shrink: 0;
+        background: #111; color: #fde68a;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 800; font-size: 0.85rem; border: 2px solid #111;
+    }
+    html { scroll-behavior: smooth; }
+</style>
+<body class="bg-[#f0f0e8] text-black font-sans">
+
+<!-- ══════════════════════════════════════════
+     NAVBAR
+══════════════════════════════════════════ -->
+<nav class="bg-blue-600 border-b-[3px] border-black px-6 h-14 flex items-center justify-between sticky top-0 z-50">
+    <div class="flex items-center gap-3">
+        <div class="w-9 h-9 bg-white border-[2.5px] border-black flex items-center justify-center font-bold text-lg text-blue-600 nb-btn">R</div>
+        <span class="text-white font-bold text-lg tracking-tight">Webhook Relay</span>
+        <span class="hidden sm:inline bg-yellow-300 border-2 border-black text-black text-xs font-bold px-2 py-0.5">relay.duls.space</span>
+    </div>
+    <div class="flex items-center gap-2">
+        <a href="#cara-pakai" class="text-white text-sm font-semibold hover:text-yellow-300 transition hidden sm:block">Tutorial</a>
+        <a href="/login"    class="nb-btn bg-white text-blue-600 text-sm font-bold px-3 py-1.5 no-underline">Login</a>
+        <a href="/register" class="nb-btn bg-yellow-300 text-black text-sm font-bold px-3 py-1.5 no-underline">Daftar</a>
+    </div>
+</nav>
+
+
+<!-- ══════════════════════════════════════════
+     HERO
+══════════════════════════════════════════ -->
+<section class="px-6 py-16 sm:py-24 max-w-5xl mx-auto">
+    <div class="flex flex-col lg:flex-row items-center gap-10">
+
+        <!-- Left text -->
+        <div class="flex-1">
+            <div class="inline-block bg-yellow-300 border-2 border-black px-3 py-1 text-xs font-bold uppercase tracking-widest mb-5">
+                ⚡ Open Platform
+            </div>
+            <h1 class="text-4xl sm:text-5xl font-extrabold leading-tight tracking-tight mb-5">
+                Teruskan Webhook<br>
+                <span class="bg-blue-600 text-white px-2">ke Server Lokal</span><br>
+                Anda
+            </h1>
+            <p class="text-gray-700 text-lg leading-relaxed mb-8 max-w-lg">
+                Relay adalah platform yang memungkinkan Anda meneruskan webhook dari internet publik ke server lokal — tanpa perlu IP publik atau port forwarding.
+            </p>
+            <div class="flex flex-wrap gap-3">
+                <a th:unless="${isLoggedIn}" href="/register" class="nb-btn bg-blue-600 text-white font-bold px-6 py-3 no-underline text-sm">
+                    Mulai Gratis →
+                </a>
+                <a th:if="${isLoggedIn}" href="/dashboard" class="nb-btn bg-blue-600 text-white font-bold px-6 py-3 no-underline text-sm">
+                    Ke Dashboard →
+                </a>
+                <a href="#cara-pakai" class="nb-btn bg-[#f0f0e8] text-black font-bold px-6 py-3 no-underline text-sm">
+                    Lihat Tutorial ↓
+                </a>
+            </div>
+        </div>
+
+        <!-- Right: diagram -->
+        <div class="flex-1 w-full max-w-md">
+            <div class="nb-card bg-white p-5">
+                <p class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">Alur Kerja Relay</p>
+                <div class="flex flex-col gap-3">
+                    <!-- Sender -->
+                    <div class="nb-card-sm bg-yellow-300 px-4 py-3 flex items-center gap-3">
+                        <i class="ti ti-cloud text-xl"></i>
+                        <div>
+                            <p class="font-bold text-sm">GitHub / Stripe / Service Lain</p>
+                            <p class="text-xs text-gray-700">Mengirim POST ke <code class="bg-black/10 px-1">relay.duls.space/hook/{slug}</code></p>
+                        </div>
+                    </div>
+                    <!-- Arrow -->
+                    <div class="text-center text-xl font-bold text-blue-600">↓</div>
+                    <!-- Relay Server -->
+                    <div class="nb-card-sm bg-blue-600 text-white px-4 py-3 flex items-center gap-3">
+                        <i class="ti ti-server text-xl"></i>
+                        <div>
+                            <p class="font-bold text-sm">Relay Server</p>
+                            <p class="text-xs text-blue-200">Antri &amp; teruskan ke agent yang terhubung</p>
+                        </div>
+                    </div>
+                    <!-- Arrow -->
+                    <div class="text-center text-xl font-bold text-blue-600">↓</div>
+                    <!-- Agent -->
+                    <div class="nb-card-sm bg-green-300 px-4 py-3 flex items-center gap-3">
+                        <i class="ti ti-device-laptop text-xl"></i>
+                        <div>
+                            <p class="font-bold text-sm">Relay Agent (di mesin lokal)</p>
+                            <p class="text-xs text-gray-700">Diteruskan ke <code class="bg-black/10 px-1">localhost:3000</code></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════
+     FITUR
+══════════════════════════════════════════ -->
+<section class="bg-blue-600 border-y-[3px] border-black px-6 py-14">
+    <div class="max-w-5xl mx-auto">
+        <p class="text-xs font-bold uppercase tracking-widest text-blue-200 mb-2">Mengapa Relay?</p>
+        <h2 class="text-3xl font-extrabold text-white mb-10 tracking-tight">Fitur Utama</h2>
+
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <!-- F1 -->
+            <div class="nb-card bg-[#f0f0e8] p-5">
+                <div class="w-10 h-10 bg-yellow-300 border-2 border-black flex items-center justify-center mb-3 nb-btn">
+                    <i class="ti ti-shield-lock text-lg"></i>
+                </div>
+                <h3 class="font-extrabold text-base mb-1">Token Auth</h3>
+                <p class="text-sm text-gray-700">Setiap proyek memiliki token unik <code class="bg-black/10 px-1 text-xs">X-Relay-Token</code>. Hanya agent dengan token yang cocok yang bisa menerima data.</p>
+            </div>
+            <!-- F2 -->
+            <div class="nb-card bg-[#f0f0e8] p-5">
+                <div class="w-10 h-10 bg-green-300 border-2 border-black flex items-center justify-center mb-3 nb-btn">
+                    <i class="ti ti-stack text-lg"></i>
+                </div>
+                <h3 class="font-extrabold text-base mb-1">Queue berbasis Redis</h3>
+                <p class="text-sm text-gray-700">Webhook tidak terlewat. Pesan masuk antri di Redis dan langsung dikirim ke agent yang sedang aktif.</p>
+            </div>
+            <!-- F3 -->
+            <div class="nb-card bg-[#f0f0e8] p-5">
+                <div class="w-10 h-10 bg-red-300 border-2 border-black flex items-center justify-center mb-3 nb-btn">
+                    <i class="ti ti-bolt text-lg"></i>
+                </div>
+                <h3 class="font-extrabold text-base mb-1">WebSocket Real-time</h3>
+                <p class="text-sm text-gray-700">Relay Agent terhubung via WebSocket. Webhook diteruskan hampir seketika tanpa polling.</p>
+            </div>
+            <!-- F4 -->
+            <div class="nb-card bg-[#f0f0e8] p-5">
+                <div class="w-10 h-10 bg-purple-300 border-2 border-black flex items-center justify-center mb-3 nb-btn">
+                    <i class="ti ti-folders text-lg"></i>
+                </div>
+                <h3 class="font-extrabold text-base mb-1">Multi-proyek</h3>
+                <p class="text-sm text-gray-700">Kelola banyak proyek dalam satu akun. Masing-masing proyek punya endpoint dan token sendiri.</p>
+            </div>
+            <!-- F5 -->
+            <div class="nb-card bg-[#f0f0e8] p-5">
+                <div class="w-10 h-10 bg-blue-300 border-2 border-black flex items-center justify-center mb-3 nb-btn">
+                    <i class="ti ti-terminal text-lg"></i>
+                </div>
+                <h3 class="font-extrabold text-base mb-1">Agent ringan</h3>
+                <p class="text-sm text-gray-700">Relay Agent adalah binary tunggal tanpa dependensi. Jalankan dengan satu perintah di Windows, macOS, atau Linux.</p>
+            </div>
+            <!-- F6 -->
+            <div class="nb-card bg-[#f0f0e8] p-5">
+                <div class="w-10 h-10 bg-yellow-300 border-2 border-black flex items-center justify-center mb-3 nb-btn">
+                    <i class="ti ti-settings text-lg"></i>
+                </div>
+                <h3 class="font-extrabold text-base mb-1">Konfigurasi fleksibel</h3>
+                <p class="text-sm text-gray-700">Atur URL tujuan lokal, aktifkan/nonaktifkan proyek, dan pantau status agent langsung dari dashboard.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════
+     TUTORIAL
+══════════════════════════════════════════ -->
+<section id="cara-pakai" class="px-6 py-16 max-w-5xl mx-auto">
+    <p class="text-xs font-bold uppercase tracking-widest text-blue-600 mb-2">Panduan Cepat</p>
+    <h2 class="text-3xl font-extrabold mb-2 tracking-tight">Cara Menggunakan Relay</h2>
+    <p class="text-gray-600 mb-12">Dari daftar hingga webhook diterima di localhost, hanya butuh 5 menit.</p>
+
+    <!-- Step 1 -->
+    <div class="flex flex-col sm:flex-row gap-6 mb-12">
+        <div class="flex-shrink-0">
+            <div class="step-num">1</div>
+        </div>
+        <div class="flex-1">
+            <h3 class="text-lg font-extrabold mb-1">Buat Akun &amp; Proyek</h3>
+            <p class="text-gray-700 text-sm mb-4">Daftar di <strong>relay.duls.space/register</strong>, lalu masuk ke Dashboard → <strong>Buat Proyek Baru</strong>. Isi nama proyek dan aktifkan status.</p>
+            <div class="nb-card-sm bg-yellow-300 p-4 flex items-start gap-3">
+                <i class="ti ti-info-circle text-lg flex-shrink-0 mt-0.5"></i>
+                <p class="text-sm font-medium">Setelah proyek dibuat, Anda akan mendapat <strong>Project ID</strong> dan <strong>Public URL</strong>. Keduanya dibutuhkan saat setup wizard agent.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="flex flex-col sm:flex-row gap-6 mb-12">
+        <div class="flex-shrink-0">
+            <div class="step-num">2</div>
+        </div>
+        <div class="flex-1">
+            <h3 class="text-lg font-extrabold mb-1">Install &amp; Jalankan Relay Agent</h3>
+            <p class="text-gray-700 text-sm mb-4">Download binary sesuai OS Anda — tidak perlu install apapun. Wizard interaktif akan muncul otomatis saat pertama kali dijalankan.</p>
+
+            <!-- OS Tabs -->
+            <div class="flex mb-3 gap-1">
+                <button onclick="switchOS('mac')"   id="os-mac"   class="os-btn nb-btn text-xs font-bold px-3 py-1 bg-black text-white cursor-pointer">🍎 macOS</button>
+                <button onclick="switchOS('linux')" id="os-linux" class="os-btn nb-btn text-xs font-bold px-3 py-1 bg-white text-black cursor-pointer">🐧 Linux</button>
+                <button onclick="switchOS('win')"   id="os-win"   class="os-btn nb-btn text-xs font-bold px-3 py-1 bg-white text-black cursor-pointer">🪟 Windows</button>
+            </div>
+
+            <!-- macOS -->
+            <div id="os-panel-mac" class="os-panel">
+                <div class="nb-card-sm mb-3">
+                    <pre class="bg-[#f0f0e8] border-none p-4 text-xs font-mono text-black overflow-x-auto leading-relaxed whitespace-pre"># 1. Download binary (pilih sesuai chip)
+# Apple Silicon — M1/M2/M3/M4
+curl -L "https://github.com/theKims0/relay-agent/releases/latest/download/relay-agent-darwin-arm64" -o relay-agent
+
+# Intel Mac
+curl -L "https://github.com/theKims0/relay-agent/releases/latest/download/relay-agent-darwin-amd64" -o relay-agent
+
+# 2. Beri izin eksekusi
+chmod +x relay-agent
+
+# 3. Jalankan — wizard otomatis akan muncul saat pertama kali
+./relay-agent</pre>
+                </div>
+            </div>
+
+            <!-- Linux -->
+            <div id="os-panel-linux" class="os-panel hidden">
+                <div class="nb-card-sm mb-3">
+                    <pre class="bg-[#f0f0e8] border-none p-4 text-xs font-mono text-black overflow-x-auto leading-relaxed whitespace-pre"># 1. Download binary
+# x86_64 (server biasa / VPS)
+curl -L "https://github.com/theKims0/relay-agent/releases/latest/download/relay-agent-linux-amd64" -o relay-agent
+
+# ARM64 (Raspberry Pi / Oracle ARM)
+curl -L "https://github.com/theKims0/relay-agent/releases/latest/download/relay-agent-linux-arm64" -o relay-agent
+
+# 2. Beri izin eksekusi
+chmod +x relay-agent
+
+# 3. Jalankan — wizard otomatis akan muncul saat pertama kali
+./relay-agent</pre>
+                </div>
+            </div>
+
+            <!-- Windows -->
+            <div id="os-panel-win" class="os-panel hidden">
+                <div class="nb-card-sm mb-3">
+                    <pre class="bg-[#f0f0e8] border-none p-4 text-xs font-mono text-black overflow-x-auto leading-relaxed whitespace-pre"># PowerShell
+# 1. Download binary
+Invoke-WebRequest -Uri "https://github.com/theKims0/relay-agent/releases/latest/download/relay-agent-windows-amd64.exe" -OutFile "relay-agent.exe"
+
+# 2. Jalankan — wizard otomatis akan muncul saat pertama kali
+.\relay-agent.exe</pre>
+                </div>
+            </div>
+
+            <!-- Wizard info -->
+            <div class="bg-blue-50 border-[2px] border-blue-300 p-3 text-xs text-blue-800 mb-3">
+                <p class="font-bold mb-1">💡 Saat pertama kali dijalankan, wizard akan muncul:</p>
+                <pre class="bg-[#f0f0e8] border border-blue-200 p-3 text-xs font-mono text-blue-900 leading-relaxed whitespace-pre mt-1">╔══════════════════════════════════════════════════╗
+║          Relay Agent — First Time Setup          ║
+╚══════════════════════════════════════════════════╝
+
+  Project ID  (dari dashboard Relay): &lt;YOUR_PROJECT_ID&gt;
+  Server URL  [ws://localhost:8081] : wss://relay.duls.space/ws/agent
+  Target URL  (service lokal Anda) : http://localhost:3000
+
+  ✅ Konfigurasi disimpan ke relay.json</pre>
+                <p class="mt-2">Jalankan berikutnya langsung konek tanpa wizard. Reset dengan <code class="bg-blue-100 px-1">--reset</code>.</p>
+            </div>
+
+            <div class="nb-card-sm bg-green-300 p-4 flex items-start gap-3">
+                <i class="ti ti-circle-check text-lg flex-shrink-0 mt-0.5"></i>
+                <p class="text-sm font-medium">Setelah terhubung, agent siap menerima dan meneruskan webhook ke service lokal Anda.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="flex flex-col sm:flex-row gap-6 mb-12">
+        <div class="flex-shrink-0">
+            <div class="step-num">3</div>
+        </div>
+        <div class="flex-1">
+            <h3 class="text-lg font-extrabold mb-1">Daftarkan Webhook URL ke Layanan Eksternal</h3>
+            <p class="text-gray-700 text-sm mb-4">Gunakan Public URL proyek Anda sebagai endpoint webhook di layanan seperti GitHub, Stripe, Midtrans, dll.</p>
+
+            <div class="nb-card-sm bg-white p-4 mb-4">
+                <p class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Format Endpoint</p>
+                <div class="bg-[#111] text-[#fde68a] font-mono text-sm px-4 py-3 break-all">
+                    https://relay.duls.space/v1/gateway/<span class="text-green-300">{public-url-slug}</span>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">Ganti <code>{public-url-slug}</code> dengan slug proyek Anda dari dashboard.</p>
+            </div>
+
+            <!-- Contoh GitHub -->
+            <p class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Contoh — GitHub Webhook</p>
+            <div class="nb-card-sm mb-3">
+                <pre class="p-4 rounded-none"><span class="token-comment"># Settings → Webhooks → Add webhook</span>
+Payload URL : <span class="token-string">https://relay.duls.space/v1/gateway/payment-relay</span>
+Content type: <span class="token-string">application/json</span>
+Secret      : <span class="token-string">(kosongkan atau isi bebas)</span>
+Events      : <span class="token-flag">Just the push event</span> (atau pilih sesuai kebutuhan)</pre>
+            </div>
+
+            <!-- Contoh cURL test -->
+            <p class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Test manual dengan cURL</p>
+            <div class="nb-card-sm">
+                <pre class="p-4 rounded-none"><span class="token-cmd">curl</span> <span class="token-flag">-X POST</span> <span class="token-string">https://relay.duls.space/v1/gateway/payment-relay</span> \
+     <span class="token-flag">-H</span> <span class="token-string">"Content-Type: application/json"</span> \
+     <span class="token-flag">-d</span> <span class="token-string">'{"event":"payment.success","amount":150000}'</span></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="flex flex-col sm:flex-row gap-6">
+        <div class="flex-shrink-0">
+            <div class="step-num">4</div>
+        </div>
+        <div class="flex-1">
+            <h3 class="text-lg font-extrabold mb-1">Terima Webhook di Lokal</h3>
+            <p class="text-gray-700 text-sm mb-4">Agent akan meneruskan request masuk ke URL target lokal Anda. Pastikan server lokal sedang berjalan.</p>
+
+            <div class="nb-card-sm bg-white p-4">
+                <p class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">Contoh — Express.js</p>
+                <pre class="p-4 rounded-none"><span class="token-comment">// server.js</span>
+<span class="token-cmd">const</span> express = require(<span class="token-string">'express'</span>);
+<span class="token-cmd">const</span> app = express();
+app.use(express.json());
+
+app.post(<span class="token-string">'/webhook'</span>, (req, res) =&gt; {
+    console.log(<span class="token-string">'Webhook diterima:'</span>, req.body);
+    res.json({ status: <span class="token-string">'ok'</span> });
+});
+
+app.listen(<span class="token-flag">3000</span>, () =&gt;
+    console.log(<span class="token-string">'Server jalan di port 3000'</span>));</pre>
+                <p class="text-xs text-gray-500 mt-3">Jalankan: <code class="bg-black/10 px-1">node server.js</code> — lalu agent akan meneruskan webhook ke <code class="bg-black/10 px-1">http://localhost:3000/webhook</code></p>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════
+     CTA
+══════════════════════════════════════════ -->
+<section class="bg-blue-600 border-y-[3px] border-black px-6 py-14 text-center">
+    <h2 class="text-3xl font-extrabold text-white mb-3 tracking-tight">Siap mencoba Relay?</h2>
+    <p class="text-blue-200 mb-8 max-w-md mx-auto">Gratis, tanpa kartu kredit. Mulai dalam hitungan menit.</p>
+    <div class="flex flex-wrap gap-3 justify-center">
+        <a th:unless="${isLoggedIn}" href="/register" class="nb-btn bg-yellow-300 text-black font-bold px-8 py-3 no-underline text-sm">
+            Daftar Sekarang — Gratis →
+        </a>
+        <a th:unless="${isLoggedIn}" href="/login" class="nb-btn bg-white text-blue-600 font-bold px-8 py-3 no-underline text-sm">
+            Masuk ke Dashboard
+        </a>
+        <a th:if="${isLoggedIn}" href="/dashboard" class="nb-btn bg-yellow-300 text-black font-bold px-8 py-3 no-underline text-sm">
+            Kembali ke Dashboard →
+        </a>
+    </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════
+     FOOTER
+══════════════════════════════════════════ -->
+<footer class="border-t-[2.5px] border-black px-6 py-6 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-600">
+    <div class="flex items-center gap-2 font-bold text-black">
+        <span class="w-7 h-7 bg-blue-600 text-white flex items-center justify-center border-2 border-black font-bold text-sm">R</span>
+        relay.duls.space
+    </div>
+    <p>Webhook Relay Platform © 2025</p>
+    <div class="flex gap-4">
+        <a th:unless="${isLoggedIn}" href="/login"    class="font-semibold text-blue-600 hover:underline">Login</a>
+        <a th:unless="${isLoggedIn}" href="/register" class="font-semibold text-blue-600 hover:underline">Register</a>
+        <a th:if="${isLoggedIn}" href="/dashboard" class="font-semibold text-blue-600 hover:underline">Dashboard</a>
+        <a href="#cara-pakai" class="font-semibold text-blue-600 hover:underline">Tutorial</a>
+    </div>
+</footer>
+
+</body>
+<script>
+    // OS tab switcher (Step 2 — Install Agent)
+    function switchOS(os) {
+        document.querySelectorAll('.os-panel').forEach(p => p.classList.add('hidden'));
+        document.querySelectorAll('.os-btn').forEach(b => {
+            b.classList.remove('bg-black', 'text-white');
+            b.classList.add('bg-white', 'text-black');
+        });
+        document.getElementById('os-panel-' + os).classList.remove('hidden');
+        const activeBtn = document.getElementById('os-' + os);
+        activeBtn.classList.add('bg-black', 'text-white');
+        activeBtn.classList.remove('bg-white', 'text-black');
+    }
+</script>
+</html>

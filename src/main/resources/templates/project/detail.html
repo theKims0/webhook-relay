@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(${project.name})}"></head>
+<body class="min-h-screen bg-[#f0f0e8]">
+
+<!-- Navbar -->
+<nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+<main class="px-6 py-6 max-w-5xl mx-auto">
+
+    <!-- Breadcrumb -->
+    <div class="mb-5">
+        <p class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1 flex items-center gap-1">
+            <a th:href="@{/dashboard}" class="text-blue-600 no-underline hover:underline">Dashboard</a>
+            <i class="ti ti-chevron-right text-xs"></i>
+            <span class="text-black">Proyek</span>
+            <i class="ti ti-chevron-right text-xs"></i>
+            <span class="text-black" th:text="${project.name}">Nama Proyek</span>
+        </p>
+
+        <!-- Page header -->
+        <div class="flex items-start justify-between gap-4 flex-wrap mt-2">
+            <div>
+                <h1 class="text-2xl font-extrabold text-black tracking-tight"
+                    th:text="${project.name}">Nama Proyek</h1>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+                <!-- Active badge -->
+                <span th:if="${project.isActive}"
+                      class="nb-badge bg-green-100 text-green-800 px-3 py-1 text-xs font-bold flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-green-500 pulse inline-block"></span> Aktif
+                </span>
+                <span th:unless="${project.isActive}"
+                      class="nb-badge bg-gray-100 text-gray-600 px-3 py-1 text-xs font-bold flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-gray-400 inline-block"></span> Nonaktif
+                </span>
+
+
+
+                <!-- Hapus -->
+                <button onclick="openDeleteModal()"
+                        class="nb-btn bg-red-50 text-red-700 text-xs font-bold px-3 py-1.5 flex items-center gap-1 cursor-pointer">
+                    <i class="ti ti-trash"></i> Hapus
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flash messages -->
+    <div th:if="${success}"
+         class="mb-5 border-[2.5px] border-black bg-green-100 px-4 py-3 text-sm font-semibold text-green-800"
+         style="box-shadow:4px 4px 0 #111" th:text="${success}"></div>
+    <div th:if="${error}"
+         class="mb-5 border-[2.5px] border-black bg-red-100 px-4 py-3 text-sm font-semibold text-red-800"
+         style="box-shadow:4px 4px 0 #111" th:text="${error}"></div>
+
+    <!-- ── Grid ── -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- ── KIRI (2 kolom) ── -->
+        <div class="lg:col-span-2 flex flex-col gap-6">
+
+            <!-- 1. Public URL -->
+            <div class="bg-white nb-card p-6">
+                <div class="flex items-center gap-2 mb-4 pb-3 border-b-[2.5px] border-black">
+                    <div class="w-8 h-8 bg-blue-600 border-2 border-black flex items-center justify-center nb-btn flex-shrink-0">
+                        <i class="ti ti-link text-white text-base"></i>
+                    </div>
+                    <span class="text-xs font-bold uppercase tracking-widest">Public webhook URL</span>
+                </div>
+
+                <p class="text-xs text-gray-500 mb-3">
+                    Arahkan pengirim webhook ke URL ini. Sertakan
+                    <code class="bg-gray-100 px-1 font-mono text-xs border border-gray-300">X-Relay-Token</code>
+                    di setiap request.
+                </p>
+
+                <div class="flex">
+                    <span class="bg-[#f0f0e8] border-[2.5px] border-r-0 border-black px-3 py-2.5 text-xs font-bold text-gray-600 flex items-center whitespace-nowrap">
+                        POST
+                    </span>
+                    <input id="publicUrlField"
+                           type="text"
+                           readonly
+                           th:value="${project.publicUrl}"
+                           class="nb-input flex-1 px-3.5 py-2.5 text-sm font-mono text-black bg-white border-l-0 cursor-pointer"/>
+                    <button onclick="copyField('publicUrlField','copyUrlIcon','copyUrlLabel')"
+                            class="nb-btn bg-black text-white text-xs font-bold px-4 py-2.5 flex items-center gap-1.5 border-l-0 cursor-pointer">
+                        <i class="ti ti-copy" id="copyUrlIcon"></i>
+                        <span id="copyUrlLabel">Salin</span>
+                    </button>
+                </div>
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-widest">Description</span>
+                </div>
+                <div class="flex">
+                    <input id="descriptionField"
+                           type="text"
+                           readonly
+                           th:value="${project.description}"
+                           class="nb-input flex-1 px-3.5 py-2.5 text-sm font-mono text-black bg-white border-l-0 cursor-pointer"/>
+                </div>
+            </div>
+
+            <!-- 2. Relay Token -->
+            <div class="bg-white nb-card p-6">
+                <div class="flex items-center gap-2 mb-4 pb-3 border-b-[2.5px] border-black">
+                    <div class="w-8 h-8 bg-violet-700 border-2 border-black flex items-center justify-center nb-btn flex-shrink-0">
+                        <i class="ti ti-key text-white text-base"></i>
+                    </div>
+                    <span class="text-xs font-bold uppercase tracking-widest">Relay token</span>
+                </div>
+
+                <p class="text-xs text-gray-500 mb-3">
+                    Gunakan token ini di header
+                    <code class="bg-gray-100 px-1 font-mono text-xs border border-gray-300">X-Relay-Token</code>
+                    saat mengirim webhook, dan sebagai parameter koneksi WebSocket client.
+                </p>
+
+                <div class="flex mb-4">
+                    <input id="tokenField"
+                           type="password"
+                           readonly
+                           th:value="${relayToken}"
+                           class="nb-input flex-1 px-3.5 py-2.5 text-sm font-mono text-black bg-white cursor-pointer"/>
+                    <button onclick="toggleToken()"
+                            class="nb-btn bg-[#f0f0e8] text-black text-xs font-bold px-3 py-2.5 flex items-center gap-1 border-l-0 cursor-pointer"
+                            title="Tampilkan / sembunyikan token">
+                        <i class="ti ti-eye" id="eyeIcon"></i>
+                    </button>
+                    <button onclick="copyField('tokenField','copyTokenIcon','copyTokenLabel')"
+                            class="nb-btn bg-black text-white text-xs font-bold px-4 py-2.5 flex items-center gap-1.5 border-l-0 cursor-pointer">
+                        <i class="ti ti-copy" id="copyTokenIcon"></i>
+                        <span id="copyTokenLabel">Salin</span>
+                    </button>
+                </div>
+
+                <!-- Regen token -->
+                <form th:action="@{/projects/{slug}/generate-token(slug=${project.getPublicUrl()})}"
+                      th:method="put"
+                      method="post">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <button type="submit"
+                            class="nb-btn bg-amber-50 text-amber-800 text-xs font-bold px-3 py-1.5 flex items-center gap-1.5 cursor-pointer"
+                            onclick="return confirm('Generate token baru? Token lama langsung tidak berlaku dan koneksi WebSocket aktif akan terputus.')">
+                        <i class="ti ti-refresh"></i> Generate token baru
+                    </button>
+                </form>
+            </div>
+
+            <!-- 3. Tutorial Relay Agent -->
+            <div class="bg-white nb-card p-6">
+                <div class="flex items-center gap-2 mb-1 pb-3 border-b-[2.5px] border-black">
+                    <div class="w-8 h-8 bg-emerald-600 border-2 border-black flex items-center justify-center nb-btn flex-shrink-0">
+                        <i class="ti ti-terminal text-white text-base"></i>
+                    </div>
+                    <span class="text-xs font-bold uppercase tracking-widest">Cara menjalankan Relay Agent</span>
+                </div>
+
+                <p class="text-xs text-gray-500 mb-4 mt-3">
+                    Relay Agent adalah program kecil yang dijalankan di mesin lokal Anda.
+                    Ia menjembatani Relay Server dengan service lokal Anda tanpa perlu IP publik.
+                </p>
+
+                <!-- ── Tab Switch: Standalone / SDK ── -->
+                <div class="flex mb-4 border-[2.5px] border-black w-fit">
+                    <button id="tab-standalone" onclick="switchTab('standalone')"
+                            class="px-4 py-1.5 text-xs font-bold bg-black text-white transition-colors">
+                        ⬇ Download Binary
+                    </button>
+                    <button id="tab-sdk" onclick="switchTab('sdk')"
+                            class="px-4 py-1.5 text-xs font-bold bg-white text-black transition-colors border-l-[2.5px] border-black">
+                        &lt;/&gt; Embed SDK
+                    </button>
+                </div>
+
+                <!-- ══════════════════════════════════════════
+                     PANEL: STANDALONE BINARY
+                ══════════════════════════════════════════ -->
+                <div id="panel-standalone">
+                    <p class="text-xs text-gray-500 mb-3">
+                        Download binary sesuai OS Anda — tidak perlu install apapun.
+                    </p>
+
+                    <!-- OS tabs -->
+                    <div class="flex mb-3 gap-1">
+                        <button onclick="switchOS('mac')"   id="os-mac"   class="os-btn nb-btn text-xs font-bold px-3 py-1 bg-black text-white cursor-pointer">🍎 macOS</button>
+                        <button onclick="switchOS('linux')" id="os-linux" class="os-btn nb-btn text-xs font-bold px-3 py-1 bg-white text-black cursor-pointer">🐧 Linux</button>
+                        <button onclick="switchOS('win')"   id="os-win"   class="os-btn nb-btn text-xs font-bold px-3 py-1 bg-white text-black cursor-pointer">🪟 Windows</button>
+                    </div>
+
+                    <!-- macOS -->
+                    <div id="os-panel-mac" class="os-panel">
+                        <div class="relative mb-3">
+                            <pre id="snippet-mac" class="bg-[#f0f0e8] border-[2.5px] border-black p-4 text-xs font-mono text-black overflow-x-auto leading-relaxed whitespace-pre"
+                            ># 1. Download binary (Apple Silicon / Intel)
+# Apple Silicon — M1/M2/M3/M4
+curl -L "https://github.com/theKims0/relay-agent/releases/latest/download/relay-agent-darwin-arm64" -o relay-agent
+
+# Intel Mac
+curl -L "https://github.com/theKims0/relay-agent/releases/latest/download/relay-agent-darwin-amd64" -o relay-agent
+
+# 2. Beri izin eksekusi
+chmod +x relay-agent
+
+# 3. Jalankan — wizard otomatis akan muncul saat pertama kali
+./relay-agent
+                            </pre>
+                            <button onclick="copySnippet('snippet-mac')"
+                                    class="absolute top-2 right-2 nb-btn bg-white text-black text-xs font-bold px-2 py-1 flex items-center gap-1 cursor-pointer">
+                                <i class="ti ti-copy text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Linux -->
+                    <div id="os-panel-linux" class="os-panel hidden">
+                        <div class="relative mb-3">
+                            <pre id="snippet-linux" class="bg-[#f0f0e8] border-[2.5px] border-black p-4 text-xs font-mono text-black overflow-x-auto leading-relaxed whitespace-pre"
+                            ># 1. Download binary
+# x86_64 (server biasa / VPS)
+curl -L "https://github.com/theKims0/relay-agent/releases/latest/download/relay-agent-linux-amd64" -o relay-agent
+
+# ARM64 (Raspberry Pi / Oracle ARM)
+curl -L "https://github.com/theKims0/relay-agent/releases/latest/download/relay-agent-linux-arm64" -o relay-agent
+
+# 2. Beri izin eksekusi
+chmod +x relay-agent
+
+# 3. Jalankan — wizard otomatis akan muncul saat pertama kali
+./relay-agent</pre>
+                            <button onclick="copySnippet('snippet-linux')"
+                                    class="absolute top-2 right-2 nb-btn bg-white text-black text-xs font-bold px-2 py-1 flex items-center gap-1 cursor-pointer">
+                                <i class="ti ti-copy text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Windows -->
+                    <div id="os-panel-win" class="os-panel hidden">
+                        <div class="relative mb-3">
+                            <pre id="snippet-win" class="bg-[#f0f0e8] border-[2.5px] border-black p-4 text-xs font-mono text-black overflow-x-auto leading-relaxed whitespace-pre"
+                            ># PowerShell
+# 1. Download binary
+Invoke-WebRequest -Uri "https://github.com/theKims0/relay-agent/releases/latest/download/relay-agent-windows-amd64.exe" -OutFile "relay-agent.exe"
+
+# 2. Jalankan — wizard otomatis akan muncul saat pertama kali
+.\relay-agent.exe</pre>
+                            <button onclick="copySnippet('snippet-win')"
+                                    class="absolute top-2 right-2 nb-btn bg-white text-black text-xs font-bold px-2 py-1 flex items-center gap-1 cursor-pointer">
+                                <i class="ti ti-copy text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Wizard info box -->
+                    <div class="bg-blue-50 border-[2px] border-blue-300 p-3 text-xs text-blue-800 mb-3">
+                        <p class="font-bold mb-1">💡 Saat pertama kali dijalankan, wizard akan muncul:</p>
+                        <div class="relative">
+                            <pre id="snippet-wizard" class="bg-[#f0f0e8] border border-blue-200 p-3 text-xs font-mono text-blue-900 leading-relaxed whitespace-pre mt-1"
+                            >╔══════════════════════════════════════════════════╗
+║          Relay Agent — First Time Setup          ║
+╚══════════════════════════════════════════════════╝
+
+  Project ID  (dari dashboard Relay): <span th:text="${project.id}" class="text-emerald-700 font-bold">uuid-xxx</span>
+  Server URL  [ws://localhost:8081] : ws://relay-server.com
+  Target URL  (service lokal Anda) : http://localhost:8080
+
+  ✅ Konfigurasi disimpan ke relay.json</pre>
+                        </div>
+                        <p class="mt-2">Jalankan berikutnya langsung konek tanpa wizard. Reset dengan <code class="bg-blue-100 px-1">--reset</code>.</p>
+                    </div>
+
+                    <!-- Gunakan Project ID ini -->
+                    <div class="bg-amber-50 border-[2px] border-amber-300 p-3 text-xs text-amber-800">
+                        <p class="font-bold mb-1">📋 Gunakan Project ID berikut saat wizard:</p>
+                        <div class="flex items-center gap-2 mt-1">
+                            <code id="projectIdDisplay" class="font-mono bg-white border border-amber-300 px-2 py-1 text-amber-900 text-xs break-all flex-1"
+                                  th:text="${project.id}">uuid-xxx</code>
+                            <button onclick="copyField('projectIdDisplay','cpIdIcon','cpIdLbl')"
+                                    class="nb-btn bg-amber-400 text-amber-900 text-xs font-bold px-2 py-1 flex items-center gap-1 cursor-pointer whitespace-nowrap border-amber-600">
+                                <i class="ti ti-copy text-xs" id="cpIdIcon"></i>
+                                <span id="cpIdLbl">Salin</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="panel-sdk" class="hidden">
+                    <p class="text-xs text-gray-500 mb-3">
+                        Copy satu file ke dalam project Anda — agent berjalan bersamaan dengan aplikasi.
+                    </p>
+
+                    <!-- Language tabs -->
+                    <div class="flex mb-3 gap-1 flex-wrap">
+                        <button onclick="switchLang('go')"     id="lang-go"     class="lang-btn nb-btn text-xs font-bold px-3 py-1 bg-black text-white cursor-pointer">Go</button>
+                        <button onclick="switchLang('java')"   id="lang-java"   class="lang-btn nb-btn text-xs font-bold px-3 py-1 bg-white text-black cursor-pointer">Java</button>
+                        <button onclick="switchLang('nodejs')" id="lang-nodejs" class="lang-btn nb-btn text-xs font-bold px-3 py-1 bg-white text-black cursor-pointer">Node.js</button>
+                        <button onclick="switchLang('python')" id="lang-python" class="lang-btn nb-btn text-xs font-bold px-3 py-1 bg-white text-black cursor-pointer">Python</button>
+                    </div>
+
+                    <!-- Go -->
+                    <div id="lang-panel-go" class="lang-panel">
+                        <div class="relative">
+                            <pre id="snippet-go" class="bg-[#f0f0e8] border-[2.5px] border-black p-4 text-xs font-mono text-black overflow-x-auto leading-relaxed whitespace-pre"
+                            ># 1. Tambah dependency
+go get github.com/gorilla/websocket
+
+# 2. Copy file relay_agent.go ke project Anda
+#    Download: https://github.com/abdulkhakim/relay/blob/main/sdk/go/relay_agent.go
+
+# 3. Panggil di main.go sebelum router.Run()
+import "yourapp/relay"
+
+func main() {
+    // Set environment variable:
+    // RELAY_PROJECT_ID=<span th:text="${project.id}" class="text-emerald-600">uuid-xxx</span>
+    // RELAY_SERVER_URL=ws://relay-server.com
+    // RELAY_TARGET_URL=http://localhost:8080
+    go relay.Start()
+
+    router.Run(":8080") // aplikasi Anda tetap jalan normal
+}</pre>
+                            <button onclick="copySnippet('snippet-go')"
+                                    class="absolute top-2 right-2 nb-btn bg-white text-black text-xs font-bold px-2 py-1 flex items-center gap-1 cursor-pointer">
+                                <i class="ti ti-copy text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Java -->
+                    <div id="lang-panel-java" class="lang-panel hidden">
+                        <div class="relative">
+                            <pre id="snippet-java" class="bg-[#f0f0e8] border-[2.5px] border-black p-4 text-xs font-mono text-black overflow-x-auto leading-relaxed whitespace-pre"
+                            ># 1. Tambah dependency di pom.xml
+&lt;dependency&gt;
+  &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+  &lt;artifactId&gt;spring-boot-starter-websocket&lt;/artifactId&gt;
+&lt;/dependency&gt;
+
+# 2. Copy RelayAgent.java ke project Anda
+#    Download: https://github.com/abdulkhakim/relay/blob/main/sdk/java/RelayAgent.java
+
+# 3. Tambahkan di application.properties:
+relay.server-url=ws://relay-server.com
+relay.project-id=<span th:text="${project.id}" class="text-emerald-600">uuid-xxx</span>
+relay.target-url=http://localhost:8080
+
+# Agent otomatis aktif saat Spring Boot start (@EventListener)</pre>
+                            <button onclick="copySnippet('snippet-java')"
+                                    class="absolute top-2 right-2 nb-btn bg-white text-black text-xs font-bold px-2 py-1 flex items-center gap-1 cursor-pointer">
+                                <i class="ti ti-copy text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Node.js -->
+                    <div id="lang-panel-nodejs" class="lang-panel hidden">
+                        <div class="relative">
+                            <pre id="snippet-nodejs" class="bg-[#f0f0e8] border-[2.5px] border-black p-4 text-xs font-mono text-black overflow-x-auto leading-relaxed whitespace-pre"
+                            ># 1. Install dependency
+npm install ws axios
+
+# 2. Copy relay-agent.ts ke project Anda
+#    Download: https://github.com/abdulkhakim/relay/blob/main/sdk/nodejs/relay-agent.ts
+
+# 3. Set environment variable & import di index.ts / app.ts:
+# RELAY_PROJECT_ID=<span th:text="${project.id}" class="text-emerald-600">uuid-xxx</span>
+# RELAY_SERVER_URL=ws://relay-server.com
+# RELAY_TARGET_URL=http://localhost:3000
+
+import './relay-agent'; // otomatis jalan saat app start</pre>
+                            <button onclick="copySnippet('snippet-nodejs')"
+                                    class="absolute top-2 right-2 nb-btn bg-white text-black text-xs font-bold px-2 py-1 flex items-center gap-1 cursor-pointer">
+                                <i class="ti ti-copy text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Python -->
+                    <div id="lang-panel-python" class="lang-panel hidden">
+                        <div class="relative">
+                            <pre id="snippet-python" class="bg-[#f0f0e8] border-[2.5px] border-black p-4 text-xs font-mono text-black overflow-x-auto leading-relaxed whitespace-pre"
+                            ># 1. Install dependency
+pip install websocket-client requests
+
+# 2. Copy relay_agent.py ke project Anda
+#    Download: https://github.com/abdulkhakim/relay/blob/main/sdk/python/relay_agent.py
+
+# 3. Set environment variable & panggil di manage.py / main.py:
+import os
+os.environ["RELAY_PROJECT_ID"] = "<span th:text="${project.id}" class="text-emerald-600">uuid-xxx</span>"
+os.environ["RELAY_SERVER_URL"] = "ws://relay-server.com"
+os.environ["RELAY_TARGET_URL"] = "http://localhost:8000"
+
+from relay_agent import start_relay_agent
+start_relay_agent()  # jalan di background thread</pre>
+                            <button onclick="copySnippet('snippet-python')"
+                                    class="absolute top-2 right-2 nb-btn bg-white text-black text-xs font-bold px-2 py-1 flex items-center gap-1 cursor-pointer">
+                                <i class="ti ti-copy text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contoh curl -->
+                <div class="mt-5 pt-4 border-t-[2px] border-dashed border-gray-300">
+                    <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Contoh kirim request via Relay (curl)</p>
+                    <div class="relative">
+                        <pre id="curlSnippet"
+                             class="bg-[#f0f0e8] border-[2.5px] border-black p-4 text-xs font-mono text-black overflow-x-auto leading-relaxed whitespace-pre"
+                        ><span class="text-gray-500"># Ganti /api/endpoint dengan path service lokal Anda</span>
+curl -X POST http://localhost:8081/v1/gateway/<span th:text="${project.publicUrl}" class="text-blue-600">slug</span>/api/endpoint \
+  -H "X-Relay-Token: &lt;RELAY_TOKEN&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"key": "value"}'</pre>
+                        <button onclick="copySnippet('curlSnippet')"
+                                class="absolute top-2 right-2 nb-btn bg-white text-black text-xs font-bold px-2 py-1 flex items-center gap-1 cursor-pointer">
+                            <i class="ti ti-copy text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Tutorial Relay Client (Requester) -->
+            <div class="bg-white nb-card p-6">
+                <div class="flex items-center gap-2 mb-1 pb-3 border-b-[2.5px] border-black">
+                    <div class="w-8 h-8 bg-indigo-600 border-2 border-black flex items-center justify-center nb-btn flex-shrink-0">
+                        <i class="ti ti-send text-white text-base"></i>
+                    </div>
+                    <span class="text-xs font-bold uppercase tracking-widest">Cara mengirim request via Relay</span>
+                </div>
+
+                <p class="text-xs text-gray-500 mb-4 mt-3">
+                    Kirim request HTTP biasa ke Relay Server dengan menambahkan header
+                    <code class="bg-gray-100 px-1 font-mono text-xs border border-gray-300">X-Relay-Token</code>.
+                    Server akan meneruskannya ke service lokal Anda secara otomatis.
+                </p>
+
+                <!-- Base URL info -->
+                <div class="bg-[#f0f0e8] border-[2.5px] border-black p-3 mb-4 flex flex-wrap items-center gap-2">
+                    <span class="text-xs font-bold uppercase tracking-widest text-gray-500 whitespace-nowrap">Base URL:</span>
+                    <code id="baseUrlDisplay"
+                          class="font-mono text-xs text-black flex-1 break-all"
+                          th:text="'http://localhost:8081/v1/gateway/' + ${project.publicUrl}">
+                        http://localhost:8081/v1/gateway/slug
+                    </code>
+                    <button onclick="copyField('baseUrlDisplay','cpBaseIcon','cpBaseLbl')"
+                            class="nb-btn bg-black text-white text-xs font-bold px-2 py-1 flex items-center gap-1 cursor-pointer whitespace-nowrap">
+                        <i class="ti ti-copy text-xs" id="cpBaseIcon"></i>
+                        <span id="cpBaseLbl">Salin</span>
+                    </button>
+                </div>
+
+                <!-- Language tabs -->
+                <div class="flex mb-4 gap-1 flex-wrap">
+                    <button onclick="switchClient('curl')"   id="client-curl"   class="client-btn nb-btn text-xs font-bold px-3 py-1 bg-black text-white cursor-pointer">cURL</button>
+                    <button onclick="switchClient('js')"     id="client-js"     class="client-btn nb-btn text-xs font-bold px-3 py-1 bg-white text-black cursor-pointer">JavaScript</button>
+                    <button onclick="switchClient('python')" id="client-python" class="client-btn nb-btn text-xs font-bold px-3 py-1 bg-white text-black cursor-pointer">Python</button>
+                    <button onclick="switchClient('go')"     id="client-go"     class="client-btn nb-btn text-xs font-bold px-3 py-1 bg-white text-black cursor-pointer">Go</button>
+                    <button onclick="switchClient('java')"   id="client-java"   class="client-btn nb-btn text-xs font-bold px-3 py-1 bg-white text-black cursor-pointer">Java</button>
+                    <button onclick="switchClient('php')"    id="client-php"    class="client-btn nb-btn text-xs font-bold px-3 py-1 bg-white text-black cursor-pointer">PHP</button>
+                </div>
+
+                <!-- cURL -->
+                <div id="client-panel-curl" class="client-panel">
+                    <div class="relative">
+                        <pre id="csnippet-curl" class="bg-[#f0f0e8] border-[2.5px] border-black p-4 text-xs font-mono text-black overflow-x-auto leading-relaxed whitespace-pre"
+                        ><span class="text-gray-400"># GET request</span>
+curl -X GET http://localhost:8081/v1/gateway/<span th:text="${project.publicUrl}" class="text-blue-600">slug</span>/api/users \
+  -H "X-Relay-Token: YOUR_RELAY_TOKEN"
+
+<span class="text-gray-400"># POST request dengan JSON body</span>
+curl -X POST http://localhost:8081/v1/gateway/<span th:text="${project.publicUrl}" class="text-blue-600">slug</span>/api/users \
+  -H "X-Relay-Token: YOUR_RELAY_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "John", "email": "john@example.com"}'
+
+<span class="text-gray-400"># PUT request</span>
+curl -X PUT http://localhost:8081/v1/gateway/<span th:text="${project.publicUrl}" class="text-blue-600">slug</span>/api/users/1 \
+  -H "X-Relay-Token: YOUR_RELAY_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "John Updated"}'</pre>
+                        <button onclick="copySnippet('csnippet-curl')"
+                                class="absolute top-2 right-2 nb-btn bg-white text-black text-xs font-bold px-2 py-1 flex items-center gap-1 cursor-pointer">
+                            <i class="ti ti-copy text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- JavaScript / Fetch -->
+                <div id="client-panel-js" class="client-panel hidden">
+                    <div class="relative">
+                        <pre id="csnippet-js" class="bg-[#f0f0e8] border-[2.5px] border-black p-4 text-xs font-mono text-black overflow-x-auto leading-relaxed whitespace-pre"
+                        ><span class="text-gray-400">// Konfigurasi</span>
+const RELAY_BASE = 'http://localhost:8081/v1/gateway/<span th:text="${project.publicUrl}" class="text-blue-600">slug</span>';
+const RELAY_TOKEN = 'YOUR_RELAY_TOKEN';
+
+<span class="text-gray-400">// Helper function</span>
+async function relayFetch(path, options = {}) {
+  return fetch(`${RELAY_BASE}${path}`, {
+    ...options,
+    headers: {
+      'X-Relay-Token': RELAY_TOKEN,
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+}
+
+<span class="text-gray-400">// GET</span>
+const users = await relayFetch('/api/users');
+const data  = await users.json();
+
+<span class="text-gray-400">// POST</span>
+const res = await relayFetch('/api/users', {
+  method: 'POST',
+  body: JSON.stringify({ name: 'John', email: 'john@example.com' }),
+});</pre>
+                        <button onclick="copySnippet('csnippet-js')"
+                                class="absolute top-2 right-2 nb-btn bg-white text-black text-xs font-bold px-2 py-1 flex items-center gap-1 cursor-pointer">
+                            <i class="ti ti-copy text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Python -->
+                <div id="client-panel-python" class="client-panel hidden">
+                    <div class="relative">
+                        <pre id="csnippet-python" class="bg-[#f0f0e8] border-[2.5px] border-black p-4 text-xs font-mono text-black overflow-x-auto leading-relaxed whitespace-pre"
+                        ><span class="text-gray-400"># pip install requests</span>
+import requests
+
+RELAY_BASE  = 'http://localhost:8081/v1/gateway/<span th:text="${project.publicUrl}" class="text-blue-600">slug</span>'
+RELAY_TOKEN = 'YOUR_RELAY_TOKEN'
+
+headers = {
+    'X-Relay-Token': RELAY_TOKEN,
+    'Content-Type': 'application/json',
+}
+
+<span class="text-gray-400"># GET</span>
+res = requests.get(f'{RELAY_BASE}/api/users', headers=headers)
+print(res.json())
+
+<span class="text-gray-400"># POST</span>
+res = requests.post(
+    f'{RELAY_BASE}/api/users',
+    headers=headers,
+    json={'name': 'John', 'email': 'john@example.com'}
+)
+print(res.status_code, res.json())</pre>
+                        <button onclick="copySnippet('csnippet-python')"
+                                class="absolute top-2 right-2 nb-btn bg-white text-black text-xs font-bold px-2 py-1 flex items-center gap-1 cursor-pointer">
+                            <i class="ti ti-copy text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Go -->
+                <div id="client-panel-go" class="client-panel hidden">
+                    <div class="relative">
+                        <pre id="csnippet-go" class="bg-[#f0f0e8] border-[2.5px] border-black p-4 text-xs font-mono text-black overflow-x-auto leading-relaxed whitespace-pre"
+                        >package main
+
+import (
+    "bytes"
+    "encoding/json"
+    "fmt"
+    "net/http"
+)
+
+const (
+    relayBase  = "http://localhost:8081/v1/gateway/<span th:text="${project.publicUrl}" class="text-blue-600">slug</span>"
+    relayToken = "YOUR_RELAY_TOKEN"
+)
+
+func relayDo(method, path string, body any) (*http.Response, error) {
+    var buf bytes.Buffer
+    if body != nil {
+        json.NewEncoder(&buf).Encode(body)
+    }
+    req, _ := http.NewRequest(method, relayBase+path, &buf)
+    req.Header.Set("X-Relay-Token", relayToken)
+    req.Header.Set("Content-Type", "application/json")
+    return http.DefaultClient.Do(req)
+}
+
+func main() {
+    <span class="text-gray-400">// GET</span>
+    resp, _ := relayDo("GET", "/api/users", nil)
+    fmt.Println(resp.Status)
+
+    <span class="text-gray-400">// POST</span>
+    resp, _ = relayDo("POST", "/api/users", map[string]string{
+        "name": "John", "email": "john@example.com",
+    })
+    fmt.Println(resp.Status)
+}</pre>
+                        <button onclick="copySnippet('csnippet-go')"
+                                class="absolute top-2 right-2 nb-btn bg-white text-black text-xs font-bold px-2 py-1 flex items-center gap-1 cursor-pointer">
+                            <i class="ti ti-copy text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Java -->
+                <div id="client-panel-java" class="client-panel hidden">
+                    <div class="relative">
+                        <pre id="csnippet-java" class="bg-[#f0f0e8] border-[2.5px] border-black p-4 text-xs font-mono text-black overflow-x-auto leading-relaxed whitespace-pre"
+                        >import java.net.URI;
+import java.net.http.*;
+
+String relayBase  = "http://localhost:8081/v1/gateway/<span th:text="${project.publicUrl}" class="text-blue-600">slug</span>";
+String relayToken = "YOUR_RELAY_TOKEN";
+
+HttpClient client = HttpClient.newHttpClient();
+
+// GET
+HttpRequest getReq = HttpRequest.newBuilder()
+    .uri(URI.create(relayBase + "/api/users"))
+    .header("X-Relay-Token", relayToken)
+    .GET()
+    .build();
+HttpResponse&lt;String&gt; getResp = client.send(getReq, HttpResponse.BodyHandlers.ofString());
+System.out.println(getResp.body());
+
+// POST
+String body = """{"name":"John","email":"john@example.com"}""";
+HttpRequest postReq = HttpRequest.newBuilder()
+    .uri(URI.create(relayBase + "/api/users"))
+    .header("X-Relay-Token", relayToken)
+    .header("Content-Type", "application/json")
+    .POST(HttpRequest.BodyPublishers.ofString(body))
+    .build();
+HttpResponse&lt;String&gt; postResp = client.send(postReq, HttpResponse.BodyHandlers.ofString());
+System.out.println(postResp.statusCode());</pre>
+                        <button onclick="copySnippet('csnippet-java')"
+                                class="absolute top-2 right-2 nb-btn bg-white text-black text-xs font-bold px-2 py-1 flex items-center gap-1 cursor-pointer">
+                            <i class="ti ti-copy text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PHP -->
+                <div id="client-panel-php" class="client-panel hidden">
+                    <div class="relative">
+                        <pre id="csnippet-php" class="bg-[#f0f0e8] border-[2.5px] border-black p-4 text-xs font-mono text-black overflow-x-auto leading-relaxed whitespace-pre"
+                        >&lt;?php
+$relayBase  = 'http://localhost:8081/v1/gateway/<span th:text="${project.publicUrl}" class="text-blue-600">slug</span>';
+$relayToken = 'YOUR_RELAY_TOKEN';
+
+// Helper function
+function relayRequest($method, $path, $data = null) {
+    global $relayBase, $relayToken;
+    $ch = curl_init($relayBase . $path);
+    $headers = ["X-Relay-Token: $relayToken", "Content-Type: application/json"];
+    curl_setopt_array($ch, [
+        CURLOPT_CUSTOMREQUEST  =&gt; $method,
+        CURLOPT_HTTPHEADER     =&gt; $headers,
+        CURLOPT_RETURNTRANSFER =&gt; true,
+        CURLOPT_POSTFIELDS     =&gt; $data ? json_encode($data) : null,
+    ]);
+    $res = curl_exec($ch);
+    curl_close($ch);
+    return json_decode($res, true);
+}
+
+// GET
+$users = relayRequest('GET', '/api/users');
+var_dump($users);
+
+// POST
+$result = relayRequest('POST', '/api/users', [
+    'name'  =&gt; 'John',
+    'email' =&gt; 'john@example.com',
+]);
+var_dump($result);
+?&gt;</pre>
+                        <button onclick="copySnippet('csnippet-php')"
+                                class="absolute top-2 right-2 nb-btn bg-white text-black text-xs font-bold px-2 py-1 flex items-center gap-1 cursor-pointer">
+                            <i class="ti ti-copy text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Cara salin token -->
+                <div class="mt-4 bg-violet-50 border-[2px] border-violet-300 p-3 text-xs text-violet-800">
+                    <p class="font-bold mb-2">🔑 Relay Token untuk header <code class="bg-violet-100 px-1">X-Relay-Token</code>:</p>
+                    <div class="flex items-center gap-2">
+                        <input id="clientTokenDisplay" type="password" readonly
+                               th:value="${relayToken}"
+                               class="font-mono bg-white border border-violet-300 px-2 py-1 text-violet-900 text-xs flex-1"/>
+                        <button onclick="toggleClientToken()"
+                                class="nb-btn bg-violet-100 text-violet-800 text-xs font-bold px-2 py-1 flex items-center cursor-pointer border-violet-400">
+                            <i class="ti ti-eye text-xs" id="clientEyeIcon"></i>
+                        </button>
+                        <button onclick="copyField('clientTokenDisplay','cpClientTokIcon','cpClientTokLbl')"
+                                class="nb-btn bg-violet-600 text-white text-xs font-bold px-2 py-1 flex items-center gap-1 cursor-pointer border-violet-800 whitespace-nowrap">
+                            <i class="ti ti-copy text-xs" id="cpClientTokIcon"></i>
+                            <span id="cpClientTokLbl">Salin Token</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- ── KANAN (1 kolom) ── -->
+        <div class="flex flex-col gap-6">
+
+            <!-- Info proyek -->
+            <div class="bg-white nb-card p-5">
+                <div class="flex items-center gap-2 mb-4 pb-3 border-b-[2.5px] border-black">
+                    <span class="text-xs font-bold uppercase tracking-widest">Info proyek</span>
+                </div>
+                <dl class="flex flex-col gap-3 text-xs">
+                    <div>
+                        <dt class="font-bold uppercase tracking-widest text-gray-400 mb-0.5">Project ID</dt>
+                        <dd class="font-mono text-gray-700 break-all" th:text="${project.id}">—</dd>
+                    </div>
+                    <div>
+                        <dt class="font-bold uppercase tracking-widest text-gray-400 mb-0.5">Slug</dt>
+                        <dd class="font-mono text-gray-700" th:text="${project.getPublicUrl() ?: '—'}">—</dd>
+                    </div>
+                    <div>
+                        <dt class="font-bold uppercase tracking-widest text-gray-400 mb-0.5">Pemilik</dt>
+                        <dd class="text-gray-700" th:text="${user.username}">—</dd>
+                    </div>
+                    <div>
+                        <dt class="font-bold uppercase tracking-widest text-gray-400 mb-0.5">Dibuat</dt>
+                        <dd class="text-gray-700"
+                            th:text="${#dates.format(project?.createdAt, 'dd MMM yyyy, HH:mm')}">—</dd>
+                    </div>
+                    <div>
+                        <dt class="font-bold uppercase tracking-widest text-gray-400 mb-0.5">Diperbarui</dt>
+                        <dd class="text-gray-700"
+                            th:text="${#dates.format(project?.updatedAt, 'dd MMM yyyy, HH:mm')}">—</dd>
+                    </div>
+                    <div>
+                        <dt class="font-bold uppercase tracking-widest text-gray-400 mb-0.5">Status</dt>
+                        <dd th:text="${project.isActive ? 'Aktif' : 'Nonaktif'}"
+                            th:class="${project.isActive ? 'font-bold text-green-700' : 'text-gray-500'}">—</dd>
+                    </div>
+                </dl>
+            </div>
+
+            <!-- Toggle aktif / nonaktif -->
+            <div class="bg-white nb-card p-5">
+                <div class="flex items-center gap-2 mb-4 pb-3 border-b-[2.5px] border-black">
+                    <span class="text-xs font-bold uppercase tracking-widest">Status proyek</span>
+                </div>
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <p class="text-sm font-bold text-black mb-0.5"
+                           th:text="${project.isActive ? 'Sedang aktif' : 'Sedang nonaktif'}">Sedang aktif</p>
+                        <p class="text-xs text-gray-500"
+                           th:text="${project.isActive ? 'Menerima webhook masuk.' : 'Semua request ditolak.'}">
+                            Menerima webhook masuk.
+                        </p>
+                    </div>
+                    <form th:action="@{/projects/{slug}/toggle(slug=${project.getPublicUrl()})}" th:method="put"
+                          method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <button type="submit"
+                                class="nb-btn text-xs font-bold px-3 py-1.5 cursor-pointer whitespace-nowrap"
+                                th:classappend="${project.isActive} ? 'bg-gray-100 text-gray-700' : 'bg-green-100 text-green-800'"
+                                th:text="${project.isActive ? 'Nonaktifkan' : 'Aktifkan'}">
+                            Nonaktifkan
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tombol kembali -->
+            <a th:href="@{/dashboard}"
+               class="nb-btn bg-[#f0f0e8] text-black text-sm font-bold px-4 py-2.5 flex items-center justify-center gap-2 no-underline">
+                <i class="ti ti-arrow-left"></i> Kembali ke daftar proyek
+            </a>
+
+            <!-- Hapus proyek -->
+            <button onclick="openDeleteModal()"
+                    class="nb-btn bg-red-50 text-red-700 text-sm font-bold px-4 py-2.5 flex items-center justify-center gap-2 cursor-pointer w-full">
+                <i class="ti ti-trash"></i> Hapus proyek
+            </button>
+
+        </div>
+
+            </div>
+        </div>
+
+
+    </div>
+</main>
+
+<!-- ── Modal: Hapus proyek ── -->
+<div id="deleteModal"
+     class="fixed inset-0 bg-black/50 z-50 items-center justify-center"
+     style="display:none">
+    <div class="bg-white nb-card p-7 max-w-sm w-full mx-4">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-red-100 border-2 border-black flex items-center justify-center nb-btn">
+                <i class="ti ti-alert-triangle text-red-700 text-lg"></i>
+            </div>
+            <h2 class="text-base font-extrabold text-black">Hapus proyek?</h2>
+        </div>
+        <p class="text-sm text-gray-600 mb-1">
+            Proyek <strong th:text="${project.name}">Nama</strong> akan dihapus permanen.
+        </p>
+        <p class="text-sm text-gray-600 mb-6">
+            Semua token dan data terkait akan ikut terhapus. Tindakan ini tidak dapat dibatalkan.
+        </p>
+        <div class="flex gap-3">
+            <form th:action="@{/projects/{slug}(slug=${project.publicUrl})}" method="post" class="flex-1">
+                <input type="hidden" name="_method" value="DELETE"/>
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit"
+                        class="nb-btn bg-red-600 text-white text-sm font-bold px-4 py-2.5 w-full flex items-center justify-center gap-1.5 cursor-pointer">
+                    <i class="ti ti-trash"></i> Hapus sekarang
+                </button>
+            </form>
+            <button onclick="closeDeleteModal()"
+                    class="nb-btn bg-[#f0f0e8] text-black text-sm font-bold px-4 py-2.5 cursor-pointer">
+                Batal
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ── Copy field ke clipboard ──────────────────────────
+    function copyField(fieldId, iconId, labelId) {
+        const el = document.getElementById(fieldId);
+        const val = el.value !== undefined ? el.value : el.innerText;
+        navigator.clipboard.writeText(val).then(() => flashCopy(iconId, labelId));
+    }
+
+    function copyEl(elId) {
+        navigator.clipboard.writeText(document.getElementById(elId).innerText);
+    }
+
+    // ── Copy snippet (pre element) ───────────────────────
+    function copySnippet(elId) {
+        const text = document.getElementById(elId).innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            // Flash semua tombol copy yang ada di sekitar elemen tersebut
+            const btn = document.querySelector(`button[onclick="copySnippet('${elId}')"]`);
+            if (btn) {
+                const icon = btn.querySelector('i');
+                const orig = icon ? icon.className : '';
+                if (icon) icon.className = 'ti ti-check text-green-500 text-xs';
+                setTimeout(() => { if (icon) icon.className = orig; }, 2000);
+            }
+        });
+    }
+
+    // ── Tab: Standalone ↔ Embed SDK ─────────────────────
+    function switchTab(tab) {
+        const panels = ['standalone', 'sdk'];
+        panels.forEach(p => {
+            document.getElementById('panel-' + p).classList.toggle('hidden', p !== tab);
+            const btn = document.getElementById('tab-' + p);
+            btn.classList.toggle('bg-black',  p === tab);
+            btn.classList.toggle('text-white', p === tab);
+            btn.classList.toggle('bg-white',  p !== tab);
+            btn.classList.toggle('text-black', p !== tab);
+        });
+    }
+
+    // ── Tab: OS (mac / linux / win) ──────────────────────
+    function switchOS(os) {
+        ['mac','linux','win'].forEach(o => {
+            document.getElementById('os-panel-' + o).classList.toggle('hidden', o !== os);
+            const btn = document.getElementById('os-' + o);
+            btn.classList.toggle('bg-black',  o === os);
+            btn.classList.toggle('text-white', o === os);
+            btn.classList.toggle('bg-white',  o !== os);
+            btn.classList.toggle('text-black', o !== os);
+        });
+    }
+
+    // ── Tab: Language (go / java / nodejs / python) ──────
+    function switchLang(lang) {
+        ['go','java','nodejs','python'].forEach(l => {
+            document.getElementById('lang-panel-' + l).classList.toggle('hidden', l !== lang);
+            const btn = document.getElementById('lang-' + l);
+            btn.classList.toggle('bg-black',  l === lang);
+            btn.classList.toggle('text-white', l === lang);
+            btn.classList.toggle('bg-white',  l !== lang);
+            btn.classList.toggle('text-black', l !== lang);
+        });
+    }
+
+    function flashCopy(iconId, labelId) {
+        const icon  = document.getElementById(iconId);
+        const label = document.getElementById(labelId);
+        const origIcon  = icon.className;
+        const origLabel = label ? label.textContent : null;
+
+        icon.className = 'ti ti-check text-green-400';
+        if (label) label.textContent = 'Tersalin!';
+
+        setTimeout(() => {
+            icon.className = origIcon;
+            if (label && origLabel) label.textContent = origLabel;
+        }, 2000);
+    }
+
+    // ── Toggle tampil / sembunyikan token ───────────────
+    function toggleToken() {
+        const field = document.getElementById('tokenField');
+        const icon  = document.getElementById('eyeIcon');
+        const isHidden = field.type === 'password';
+        field.type     = isHidden ? 'text' : 'password';
+        icon.className = isHidden ? 'ti ti-eye-off' : 'ti ti-eye';
+    }
+
+    // ── Tab: Language client (curl/js/python/go/java/php) ──
+    function switchClient(lang) {
+        ['curl','js','python','go','java','php'].forEach(l => {
+            document.getElementById('client-panel-' + l).classList.toggle('hidden', l !== lang);
+            const btn = document.getElementById('client-' + l);
+            btn.classList.toggle('bg-black',  l === lang);
+            btn.classList.toggle('text-white', l === lang);
+            btn.classList.toggle('bg-white',  l !== lang);
+            btn.classList.toggle('text-black', l !== lang);
+        });
+    }
+
+    // ── Toggle token client ──────────────────────────────
+    function toggleClientToken() {
+        const field = document.getElementById('clientTokenDisplay');
+        const icon  = document.getElementById('clientEyeIcon');
+        const isHidden = field.type === 'password';
+        field.type     = isHidden ? 'text' : 'password';
+        icon.className = isHidden ? 'ti ti-eye-off text-xs' : 'ti ti-eye text-xs';
+    }
+
+
+    function openDeleteModal()  { document.getElementById('deleteModal').style.display = 'flex'; }
+    function closeDeleteModal() { document.getElementById('deleteModal').style.display = 'none'; }
+
+    document.getElementById('deleteModal').addEventListener('click', function(e) {
+        if (e.target === this) closeDeleteModal();
+    });
+</script>
+</body>
+</html>

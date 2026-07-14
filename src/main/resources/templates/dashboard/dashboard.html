@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Dashboard')}"></head>
+<body class="min-h-screen bg-[#f0f0e8]">
+
+<!-- Navbar -->
+<nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+<!-- Main -->
+<main class="px-6 py-7">
+
+    <!-- Header -->
+    <div class="flex items-end justify-between mb-6 flex-wrap gap-3">
+        <div>
+            <p class="text-xs font-bold uppercase tracking-widest text-blue-600 mb-1">Dashboard</p>
+            <h1 class="text-2xl font-extrabold text-black tracking-tight">Proyek saya</h1>
+        </div>
+        <a th:href="@{/projects}"
+           class="nb-btn bg-blue-600 text-white text-sm font-semibold px-4 py-2 flex items-center gap-1.5 no-underline">
+            <i class="ti ti-plus"></i> Buat proyek baru
+        </a>
+    </div>
+
+    <!-- Alerts -->
+    <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-7">
+        <div class="nb-card bg-yellow-300 p-4">
+            <p class="text-xs font-bold uppercase tracking-wider text-yellow-900">Total proyek</p>
+            <p class="text-3xl font-extrabold text-black mt-1" th:text="${totalProjects}">0</p>
+        </div>
+        <div class="nb-card bg-green-300 p-4">
+            <p class="text-xs font-bold uppercase tracking-wider text-green-900">Aktif</p>
+            <p class="text-3xl font-extrabold text-black mt-1" th:text="${activeCount}">0</p>
+        </div>
+        <div class="nb-card bg-red-300 p-4">
+            <p class="text-xs font-bold uppercase tracking-wider text-red-900">Nonaktif</p>
+            <p class="text-3xl font-extrabold text-black mt-1" th:text="${inactiveCount}">0</p>
+        </div>
+        <div class="nb-card bg-purple-300 p-4">
+            <p class="text-xs font-bold uppercase tracking-wider text-purple-900">Queue aktif</p>
+            <p class="text-3xl font-extrabold text-black mt-1" th:text="${activeCount}">0</p>
+        </div>
+    </div>
+
+    <!-- Empty state -->
+    <div th:if="${#lists.isEmpty(projects)}"
+         class="nb-card bg-white p-12 text-center">
+        <i class="ti ti-webhook text-5xl text-slate-400 block mb-3"></i>
+        <p class="font-bold text-lg text-black mb-1">Belum ada proyek</p>
+        <p class="text-sm text-slate-500">Buat proyek pertama untuk mulai meneruskan webhook.</p>
+    </div>
+
+    <!-- Project cards -->
+    <div th:unless="${#lists.isEmpty(projects)}"
+         class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+
+        <div th:each="project : ${projects}" class="nb-card bg-white overflow-hidden">
+
+            <!-- Card header -->
+            <div class="border-b-[2.5px] border-black px-4 py-2.5 flex items-center justify-between"
+                 th:classappend="${project.isActive} ? 'bg-blue-600' : 'bg-slate-500'">
+                <span class="text-xs font-bold uppercase tracking-widest text-white">Webhook</span>
+                <span th:if="${project.isActive}"
+                      class="inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-0.5 bg-green-200 text-green-900 border-2 border-black">
+                    <span class="w-2 h-2 rounded-full bg-green-500 border border-green-800"></span> Aktif
+                </span>
+                <span th:unless="${project.isActive}"
+                      class="inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-0.5 bg-slate-200 text-slate-700 border-2 border-black">
+                    <span class="w-2 h-2 rounded-full bg-slate-400 border border-slate-600"></span> Nonaktif
+                </span>
+            </div>
+
+            <!-- Card body -->
+            <div class="p-4">
+                <h3 class="text-base font-extrabold text-black mb-1 tracking-tight" th:text="${project.name}">Nama Proyek</h3>
+                <p class="text-sm text-slate-600 leading-relaxed mb-4 line-clamp-2"
+                   th:text="${project.description ?: '-'}">Deskripsi proyek.</p>
+
+                <div class="flex flex-col gap-1.5 mb-4 text-xs text-slate-600">
+                    <div class="flex items-center gap-2" th:if="${project.publicUrl}">
+                        <i class="ti ti-link text-blue-600 text-sm flex-shrink-0"></i>
+                        <span class="font-mono bg-slate-100 border border-slate-300 px-2 py-0.5 truncate max-w-[200px]"
+                              th:text="${project.publicUrl}"></span>
+                    </div>
+                    <div class="flex items-center gap-2" th:if="${project.queueName}">
+                        <i class="ti ti-stack text-blue-600 text-sm flex-shrink-0"></i>
+                        <span class="font-mono" th:text="${project.queueName}"></span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <i class="ti ti-calendar text-slate-400 text-sm flex-shrink-0"></i>
+                        <span th:text="${#temporals.format(project.createdAt.toLocalDateTime(), 'd MMM yyyy')}">1 Jan 2025</span>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-2 border-t-2 border-black pt-3">
+                    <a th:href="@{/projects/{id}(id=${project.getPublicUrl()})}"
+                       class="nb-btn bg-yellow-300 text-black text-xs py-1.5 px-2.5 flex items-center justify-center no-underline">
+                        <i class="ti ti-eye"></i>
+                    </a>
+                    <form th:action="@{/projects/{id}(id=${project.publicUrl})}" method="post" class="m-0">
+                        <input type="hidden" name="_method" value="DELETE"/>
+                        <button type="submit" class="nb-btn bg-red-500 text-white text-xs py-1.5 px-2.5 flex items-center justify-center">
+                            <i class="ti ti-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="mt-8 pt-4 border-t-2 border-black flex justify-between text-xs text-slate-500">
+        <span>Webhook Relay © 2025</span>
+        <span th:text="${totalProjects} + ' proyek ditemukan'">0 proyek ditemukan</span>
+    </div>
+</main>
+
+</body>
+</html>

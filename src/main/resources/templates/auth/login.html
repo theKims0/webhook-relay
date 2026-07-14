@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Login')}"></head>
+<body class="min-h-screen bg-[#f0f0e8] flex items-center justify-center px-4 py-10">
+
+    <div class="w-full max-w-sm flex flex-col gap-0">
+
+        <!-- Header / Logo bar -->
+        <div class="bg-blue-600 border-[2.5px] border-b-0 border-black px-5 py-3 flex items-center gap-3">
+            <div class="w-9 h-9 bg-white border-[2.5px] border-black flex items-center justify-center font-bold text-lg text-blue-600 nb-btn flex-shrink-0">
+                R
+            </div>
+            <div>
+                <p class="text-white font-extrabold text-base tracking-tight leading-none">Webhook Relay</p>
+                <p class="text-blue-200 text-xs font-medium mt-0.5">Masuk ke akun Anda</p>
+            </div>
+            <a href="/" class="nb-btn ml-auto bg-white text-blue-600 text-xs font-bold px-3 py-1.5 no-underline whitespace-nowrap">
+                ← Kembali
+            </a>
+        </div>
+
+        <!-- Card -->
+        <div class="nb-card bg-white px-6 py-7">
+
+            <!-- Title -->
+            <div class="mb-6">
+                <p class="text-xs font-bold uppercase tracking-widest text-blue-600 mb-1">Autentikasi</p>
+                <h1 class="text-2xl font-extrabold text-black tracking-tight">Login</h1>
+            </div>
+
+            <!-- Alerts -->
+            <div th:replace="~{fragments/alerts :: alerts-auth}"></div>
+
+            <form th:action="@{/login}" method="post" th:object="${login}" novalidate class="flex flex-col gap-4">
+
+                <!-- Username -->
+                <div>
+                    <label for="username" class="block text-xs font-bold uppercase tracking-widest text-black mb-1.5">
+                        Username
+                    </label>
+                    <input id="username" type="text" th:field="*{username}"
+                           placeholder="contoh: relayadmin"
+                           class="nb-input w-full px-3.5 py-2.5 text-sm text-black bg-white"
+                           required>
+                    <p class="text-xs text-red-600 font-semibold mt-1 error-message"></p>
+                    <p class="text-xs text-red-600 font-semibold mt-1"
+                       th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></p>
+                </div>
+
+                <!-- Password -->
+                <div>
+                    <label for="password" class="block text-xs font-bold uppercase tracking-widest text-black mb-1.5">
+                        Password
+                    </label>
+                    <input id="password" type="password" th:field="*{password}"
+                           placeholder="Minimal 8 karakter"
+                           class="nb-input w-full px-3.5 py-2.5 text-sm text-black bg-white"
+                           required>
+                    <p class="text-xs text-red-600 font-semibold mt-1 error-message"></p>
+                    <p class="text-xs text-red-600 font-semibold mt-1"
+                       th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></p>
+                </div>
+
+                <!-- Submit -->
+                <button type="submit"
+                        class="nb-btn bg-blue-600 text-white text-sm font-bold px-4 py-3 w-full flex items-center justify-center gap-2 mt-1 cursor-pointer">
+                    Masuk →
+                </button>
+            </form>
+
+            <!-- Footer link -->
+            <div class="mt-5 pt-4 border-t-[2px] border-black text-center text-sm text-gray-600">
+                Belum punya akun?
+                <a th:href="@{/register}" class="font-bold text-blue-600 hover:underline">Daftar di sini</a>
+            </div>
+        </div>
+
+        <!-- Bottom stripe -->
+        <div class="h-2 border-[2.5px] border-t-0 border-black"
+             style="background: repeating-linear-gradient(-45deg, #111 0, #111 4px, #f0f0e8 4px, #f0f0e8 9px);">
+        </div>
+    </div>
+
+</body>
+<script>
+    const form = document.querySelector('form');
+    const username = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+
+    function showError(input, message) {
+        const errorBox = input.parentElement.querySelector('.error-message');
+        if (errorBox) errorBox.textContent = message;
+    }
+    function clearError(input) {
+        const errorBox = input.parentElement.querySelector('.error-message');
+        if (errorBox) errorBox.textContent = '';
+    }
+    function validateUsername() {
+        if (!username.value.trim()) { showError(username, 'Username tidak boleh kosong'); return false; }
+        clearError(username); return true;
+    }
+    function validatePassword() {
+        if (!passwordInput.value) { showError(passwordInput, 'Password tidak boleh kosong'); return false; }
+        if (passwordInput.value.length < 8) { showError(passwordInput, 'Password minimal 8 karakter'); return false; }
+        clearError(passwordInput); return true;
+    }
+    username.addEventListener('input', validateUsername);
+    passwordInput.addEventListener('input', validatePassword);
+    form.addEventListener('submit', function (event) {
+        if (!validateUsername() | !validatePassword()) event.preventDefault();
+    });
+</script>
+</html>
