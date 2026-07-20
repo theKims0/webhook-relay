@@ -1,0 +1,39 @@
+# ==============================================================
+# .dockerignore — Relay Project
+# ==============================================================
+# File ini memberitahu Docker apa yang TIDAK perlu di-copy
+# ke dalam build context saat "docker build" dijalankan.
+#
+# Manfaat:
+#   1. Build lebih cepat (upload context lebih kecil)
+#   2. Layer cache lebih efektif
+#   3. Tidak ada file sensitif yang masuk ke image
+# ==============================================================
+
+# Folder hasil build Maven — sudah ada di stage builder
+target/
+
+# Git metadata — tidak diperlukan dalam image
+.git/
+.gitignore
+.gitattributes
+
+# IDE & OS files — tidak relevan untuk runtime
+.idea/
+*.iml
+.DS_Store
+*.swp
+*.swo
+
+# File development yang tidak perlu masuk production
+dump.rdb
+*.md
+HELP.md
+
+# Log files
+*.log
+logs/
+
+# Environment files (jangan pernah masuk image!)
+.env
+*.env
