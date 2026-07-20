@@ -14,8 +14,9 @@
 # STAGE 1: BUILD
 # Base image: Maven + JDK (untuk compile)
 # eclipse-temurin adalah distribusi OpenJDK yang resmi & ringan
+# Versi harus SAMA dengan <java.version> di pom.xml → Java 25
 # ---------------------------------------------------------------
-FROM maven:3.9-eclipse-temurin-21 AS builder
+FROM maven:3.9-eclipse-temurin-25 AS builder
 
 WORKDIR /app
 
@@ -36,10 +37,11 @@ RUN mvn clean package -DskipTests -B
 
 # ---------------------------------------------------------------
 # STAGE 2: RUNTIME
-# Base image: JRE Alpine (hanya runtime Java, tanpa Maven/JDK)
-# Alpine = distro Linux super kecil (~5MB), aman, dan cepat
+# Base image: JRE (hanya runtime Java, tanpa Maven/JDK)
+# Versi harus SAMA dengan stage builder → Java 25
+# Catatan: Java 25 belum tersedia di Alpine, pakai image Ubuntu/Jammy
 # ---------------------------------------------------------------
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre
 
 # Label metadata image — berguna untuk identifikasi di GHCR
 LABEL maintainer="Abdul Khakim"
@@ -59,7 +61,7 @@ EXPOSE 8080
 # Spring Boot Actuator endpoint /actuator/health (jika diaktifkan)
 # Fallback: cek apakah port 8080 merespons
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD wget -qO- http://localhost:8080/actuator/health > /dev/null 2>&1 || exit 1
+    CMD curl -f http://localhost:8080/actuator/health > /dev/null 2>&1 || exit 1
 
 # Jalankan Spring Boot app
 # -Dspring.profiles.active=prod → aktifkan application-prod.properties
