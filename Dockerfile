@@ -43,6 +43,11 @@ RUN mvn clean package -DskipTests -B
 # ---------------------------------------------------------------
 FROM eclipse-temurin:25-jre
 
+# Install wget untuk Docker healthcheck (sama seperti personal-porto)
+# --no-install-recommends → hemat ukuran image
+RUN apt-get update && apt-get install -y wget --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
 # Label metadata image — berguna untuk identifikasi di GHCR
 LABEL maintainer="Abdul Khakim"
 LABEL app="relay"
@@ -61,7 +66,7 @@ EXPOSE 8080
 # Spring Boot Actuator endpoint /actuator/health (jika diaktifkan)
 # Fallback: cek apakah port 8080 merespons
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:8080/actuator/health > /dev/null 2>&1 || exit 1
+    CMD wget -qO- http://localhost:${SERVER_PORT:-8080}/ > /dev/null 2>&1 || exit 1
 
 # Jalankan Spring Boot app
 # -Dspring.profiles.active=prod → aktifkan application-prod.properties
